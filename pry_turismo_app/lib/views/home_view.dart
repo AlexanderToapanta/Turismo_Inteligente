@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'mapa_view.dart';
 import 'lista_sitios_view.dart';
 import 'rutas_view.dart';
+import 'camara_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -29,12 +30,14 @@ class _HomeViewState extends State<HomeView> {
     switch (index) {
       case 2:
         return const MapaView();
+      case 3:
+        return const CamaraView();
       case 4:
         return const RutasView();
       case 1:
         return const ListaSitiosView();
       default:
-        // Reseñas (0), Fotos (3) — placeholder
+        // Reseñas (0) — placeholder
         return _PlaceholderView(label: _items[index].label);
     }
   }
