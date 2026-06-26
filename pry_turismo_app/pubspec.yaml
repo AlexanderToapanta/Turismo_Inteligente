@@ -1,0 +1,36 @@
+name: pry_turismo_app
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Mapas y Ubicación
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.1
+  geolocator: ^10.1.0
+  http: ^1.1.0
+  
+  # Sensores y Estado
+  flutter_compass: ^0.8.0
+  provider: ^6.1.1
+  permission_handler: ^11.3.1
+  
+  # Diseño y Tipografía
+  google_fonts: ^6.0.0
+  
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
