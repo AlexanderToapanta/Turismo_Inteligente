@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "782499755343",
+    "project_id": "turismo-7432d",
+    "storage_bucket": "turismo-7432d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782499755343:android:077863ebae1586db8b013a",
+        "android_client_info": {
+          "package_name": "com.example.pry_turismo_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "782499755343-nu0kq0nptb9297g7dl9fbkdurdf4r8db.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJm_8heF4kiKtkOFnExamGdnBcgO3sMss"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "782499755343-nu0kq0nptb9297g7dl9fbkdurdf4r8db.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

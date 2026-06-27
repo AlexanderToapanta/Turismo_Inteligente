@@ -10,6 +10,7 @@ class AuthViewModel extends ChangeNotifier {
   String mensaje = '';
 
   AuthViewModel() {
+    usuario = _authService.currentUser;
     _authService.authStateChanges.listen((User? user) {
       usuario = user;
       notifyListeners();

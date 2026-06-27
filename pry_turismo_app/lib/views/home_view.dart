@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/auth_viewmodel.dart';
 import 'mapa_view.dart';
 import 'lista_sitios_view.dart';
 import 'rutas_view.dart';
@@ -46,6 +48,8 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary; // 0xFFE60012
+    final authViewModel = Provider.of<AuthViewModel>(context);
+    final user = authViewModel.usuario;
 
     return Scaffold(
       appBar: AppBar(
@@ -75,6 +79,33 @@ class _HomeViewState extends State<HomeView> {
           ],
         ),
         elevation: 0,
+        actions: [
+          if (user != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.white24,
+                    backgroundImage: user.photoURL != null
+                        ? NetworkImage(user.photoURL!)
+                        : null,
+                    child: user.photoURL == null
+                        ? const Icon(Icons.person, size: 20, color: Colors.white)
+                        : null,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.logout, color: Colors.white),
+                    tooltip: 'Cerrar sesión',
+                    onPressed: () {
+                      authViewModel.signOut();
+                    },
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
       extendBody: true, // Para que el body vaya detrás de la notch
       body: _buildView(_indiceActual),
