@@ -6,6 +6,8 @@ import 'mapa_view.dart';
 import 'lista_sitios_view.dart';
 import 'rutas_view.dart';
 import 'camara_view.dart';
+import 'resenas_view.dart';
+import 'crear_resena_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -38,8 +40,9 @@ class _HomeViewState extends State<HomeView> {
         return const RutasView();
       case 1:
         return const ListaSitiosView();
+      case 0:
+        return const ResenasView();
       default:
-        // Reseñas (0) — placeholder
         return _PlaceholderView(label: _items[index].label);
     }
   }
@@ -109,6 +112,19 @@ class _HomeViewState extends State<HomeView> {
       ),
       extendBody: true, // Para que el body vaya detrás de la notch
       body: _buildView(_indiceActual),
+      floatingActionButton: _indiceActual == 0
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CrearResenaView(),
+                  ),
+                );
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
       bottomNavigationBar: _CustomNavBar(
         selectedIndex: _indiceActual,
         items: _items,

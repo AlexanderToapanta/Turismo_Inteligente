@@ -18,4 +18,21 @@ class SitioTuristico {
     // Para un mayor detalle, podrías agregar una API de geocodificación inversa
     return "Ubicación: $latitud, $longitud";
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+  
+    return other is SitioTuristico &&
+      other.nombre == nombre &&
+      other.latitud == latitud &&
+      other.longitud == longitud;
+  }
+
+  @override
+  int get hashCode {
+    return nombre.hashCode ^
+      latitud.hashCode ^
+      longitud.hashCode;
+  }
 }

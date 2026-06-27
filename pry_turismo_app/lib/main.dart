@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'viewmodels/turismo_viewmodel.dart';
 import 'viewmodels/auth_viewmodel.dart';
+import 'viewmodels/resena_viewmodel.dart';
 import 'views/home_view.dart';
 import 'views/login_view.dart';
 import 'theme/tema_turismo.dart';
@@ -11,6 +13,7 @@ void main() async {
   // Asegura que los servicios de Flutter (GPS, Sensores) estén inicializados
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await initializeDateFormatting('es', null);
   runApp(const MyApp());
 }
 
@@ -24,6 +27,7 @@ class MyApp extends StatelessWidget {
         // Proveemos el ViewModel a toda la aplicación
         ChangeNotifierProvider(create: (_) => TurismoViewModel()),
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => ResenaViewModel()),
       ],
       child: MaterialApp(
         title: 'Turismo Local App',

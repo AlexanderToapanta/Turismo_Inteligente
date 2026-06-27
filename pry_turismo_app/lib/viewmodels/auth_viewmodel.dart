@@ -17,6 +17,47 @@ class AuthViewModel extends ChangeNotifier {
     });
   }
 
+  // ─────────────────────────────────────────────────────────
+  /// Registro con correo, contraseña y nombre.
+  /// Crea la cuenta en Auth y el documento en Firestore.
+  // ─────────────────────────────────────────────────────────
+  Future<void> registrarConCorreo({
+    required String nombre,
+    required String email,
+    required String password,
+  }) async {
+    if (nombre.trim().isEmpty || email.isEmpty || password.isEmpty) {
+      mensaje = 'Por favor completa todos los campos';
+      notifyListeners();
+      return;
+    }
+
+    cargando = true;
+    mensaje = '';
+    notifyListeners();
+
+    try {
+      usuario = await _authService.registrarConCorreo(
+        nombre: nombre,
+        email: email,
+        password: password,
+      );
+
+      if (usuario != null) {
+        mensaje = 'Cuenta creada correctamente';
+      }
+    } catch (e) {
+      mensaje = 'Error al registrarse: ${e.toString()}';
+    } finally {
+      cargando = false;
+      notifyListeners();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  /// Inicio de sesión con Google.
+  /// Crea el documento en Firestore si es la primera vez.
+  // ─────────────────────────────────────────────────────────
   Future<void> signInWithGoogle() async {
     cargando = true;
     mensaje = '';
@@ -38,6 +79,9 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  // ─────────────────────────────────────────────────────────
+  /// Inicio de sesión con correo y contraseña.
+  // ─────────────────────────────────────────────────────────
   Future<void> signInWithEmailAndPassword(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       mensaje = 'Por favor ingresa correo y contraseña';
@@ -63,6 +107,7 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  // ─────────────────────────────────────────────────────────
   Future<void> signOut() async {
     cargando = true;
     notifyListeners();
