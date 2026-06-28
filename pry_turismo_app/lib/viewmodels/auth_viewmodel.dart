@@ -8,6 +8,8 @@ class AuthViewModel extends ChangeNotifier {
   User? usuario;
   bool cargando = false;
   String mensaje = '';
+  // Error específico del flujo de registro (usado en RegisterView)
+  String errorRegistro = '';
 
   AuthViewModel() {
     usuario = _authService.currentUser;
@@ -15,6 +17,15 @@ class AuthViewModel extends ChangeNotifier {
       usuario = user;
       notifyListeners();
     });
+  }
+
+  // ─────────────────────────────────────────────────────────
+  /// Limpia el mensaje y el error de registro anteriores.
+  // ─────────────────────────────────────────────────────────
+  void limpiarMensaje() {
+    mensaje = '';
+    errorRegistro = '';
+    notifyListeners();
   }
 
   // ─────────────────────────────────────────────────────────
@@ -47,7 +58,8 @@ class AuthViewModel extends ChangeNotifier {
         mensaje = 'Cuenta creada correctamente';
       }
     } catch (e) {
-      mensaje = 'Error al registrarse: ${e.toString()}';
+      errorRegistro = _mensajeFirebase(e);
+      mensaje = errorRegistro;
     } finally {
       cargando = false;
       notifyListeners();
@@ -59,6 +71,7 @@ class AuthViewModel extends ChangeNotifier {
   /// Crea el documento en Firestore si es la primera vez.
   // ─────────────────────────────────────────────────────────
   Future<void> signInWithGoogle() async {
+    errorRegistro = '';
     cargando = true;
     mensaje = '';
     notifyListeners();
@@ -122,5 +135,36 @@ class AuthViewModel extends ChangeNotifier {
       cargando = false;
       notifyListeners();
     }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  /// Traduce los errores de FirebaseAuth a mensajes legibles en español.
+  // ─────────────────────────────────────────────────────────
+  String _mensajeFirebase(Object e) {
+    if (e is FirebaseAuthException) {
+      switch (e.code) {
+        case 'email-already-in-use':
+          return 'Ya existe una cuenta con ese correo electrónico.';
+        case 'invalid-email':
+          return 'El formato del correo no es válido.';
+        case 'weak-password':
+          return 'La contraseña debe tener al menos 6 caracteres.';
+        case 'wrong-password':
+          return 'Contraseña incorrecta.';
+        case 'user-not-found':
+          return 'No existe una cuenta con ese correo.';
+        case 'user-disabled':
+          return 'Esta cuenta ha sido deshabilitada.';
+        case 'too-many-requests':
+          return 'Demasiados intentos. Intenta más tarde.';
+        case 'network-request-failed':
+          return 'Sin conexión a internet. Verifica tu red.';
+        case 'operation-not-allowed':
+          return 'Este método de autenticación no está habilitado.';
+        default:
+          return e.message ?? 'Ocurrió un error inesperado.';
+      }
+    }
+    return e.toString();
   }
 }

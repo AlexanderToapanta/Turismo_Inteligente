@@ -31,17 +31,19 @@ class UsuarioService {
     final correo = (firebaseUser.email ?? '').toLowerCase().trim();
     final rol = correo == _correoAdmin ? 'administrador' : 'usuario';
 
-    final nuevoUsuario = UsuarioModel(
-      id: firebaseUser.uid,
-      nombre: nombre?.trim().isNotEmpty == true
-          ? nombre!.trim()
-          : (firebaseUser.displayName ?? 'Sin nombre'),
-      correo: correo,
-      rol: rol,
-      fechaRegistro: DateTime.now(),
-    );
+    final nombreFinal = nombre?.trim().isNotEmpty == true
+        ? nombre!.trim()
+        : (firebaseUser.displayName ?? 'Sin nombre');
 
-    await docRef.set(nuevoUsuario.toMap());
+    // Usamos FieldValue.serverTimestamp() para que la fecha la asigne el
+    // servidor de Firestore (más confiable que DateTime.now() local).
+    await docRef.set({
+      'id': firebaseUser.uid,
+      'nombre': nombreFinal,
+      'correo': correo,
+      'rol': rol,
+      'fechaRegistro': FieldValue.serverTimestamp(),
+    });
   }
 
   // ─────────────────────────────────────────────────────────

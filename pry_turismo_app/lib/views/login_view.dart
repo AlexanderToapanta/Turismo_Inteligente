@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../theme/tema_turismo.dart';
+import 'register_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
@@ -47,9 +48,10 @@ class _LoginViewState extends State<LoginView> {
                 Text(
                   'Login',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: textPrimary,
-                      ) ??
+                  style:
+                      Theme.of(
+                        context,
+                      ).textTheme.displayLarge?.copyWith(color: textPrimary) ??
                       TextStyle(
                         color: textPrimary,
                         fontSize: 40,
@@ -66,7 +68,7 @@ class _LoginViewState extends State<LoginView> {
                     hintText: 'Username',
                     hintStyle: TextStyle(color: textSecondary),
                     prefixIcon: Icon(Icons.person_outline, color: primary),
-                    // Si el tema global se aplica, esto puede ser redundante, 
+                    // Si el tema global se aplica, esto puede ser redundante,
                     // pero lo aseguramos con los colores del tema
                     filled: true,
                     fillColor: surface,
@@ -136,14 +138,13 @@ class _LoginViewState extends State<LoginView> {
                           }
                           return textSecondary;
                         }),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      'Remember me',
-                      style: TextStyle(color: textSecondary),
-                    ),
+                    Text('Remember me', style: TextStyle(color: textSecondary)),
                   ],
                 ),
                 const SizedBox(height: 32),
@@ -170,7 +171,10 @@ class _LoginViewState extends State<LoginView> {
                       ? SizedBox(
                           height: 24,
                           width: 24,
-                          child: CircularProgressIndicator(color: textPrimary, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            color: textPrimary,
+                            strokeWidth: 2,
+                          ),
                         )
                       : Text(
                           'LOGIN',
@@ -183,18 +187,37 @@ class _LoginViewState extends State<LoginView> {
                 ),
                 const SizedBox(height: 24),
 
-                // Forgot password
+                // Forgot password and register navigation
                 Center(
-                  child: TextButton(
-                    onPressed: () {
-                      // Acción de olvidar contraseña
-                    },
-                    child: Text(
-                      'Forgot your password?',
-                      style: TextStyle(color: textSecondary),
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          // Acción de olvidar contraseña (placeholder)
+                        },
+                        child: Text(
+                          'Forgot your password?',
+                          style: TextStyle(color: textSecondary),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterView(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          '¿No tienes cuenta? Regístrate',
+                          style: TextStyle(color: primary),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 16),
                 const SizedBox(height: 16),
 
                 // Separador o texto de mensajes de error/éxito
