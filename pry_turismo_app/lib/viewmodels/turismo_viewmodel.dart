@@ -7,11 +7,13 @@ import '../models/detalle_lugar.dart';
 import '../services/turismo_service.dart';
 import '../services/ruta_service.dart';
 import '../services/google_places_service.dart';
+import '../services/resena_service.dart';
 
 class TurismoViewModel extends ChangeNotifier {
   final TurismoService _service = TurismoService();
   final RutaService _rutaService = RutaService();
   final GooglePlacesService _placesService = GooglePlacesService();
+  final ResenaService _resenaService = ResenaService();
 
   Position? _posicionActual;
   List<SitioTuristico> _sitiosCercanos = [];
@@ -27,6 +29,10 @@ class TurismoViewModel extends ChangeNotifier {
   // Detalles de Google Places
   bool _cargandoDetalles = false;
   DetalleLugar? _detalleActual;
+
+  // Promedio de reseñas de la app
+  Map<String, dynamic>? _promedioResenas;
+  bool _cargandoPromedio = false;
 
   String _categoriaSeleccionada = 'Todos';
   final List<String> categorias = ['Todos', 'Hoteles', 'Comida', 'Cultura', 'Naturaleza'];
@@ -46,6 +52,8 @@ class TurismoViewModel extends ChangeNotifier {
   DetalleLugar? get detalleActual => _detalleActual;
   double? get azimutHaciaSitio => _azimutHaciaSitio;
   String get categoriaSeleccionada => _categoriaSeleccionada;
+  Map<String, dynamic>? get promedioResenas => _promedioResenas;
+  bool get cargandoPromedio => _cargandoPromedio;
   
   // Acceso al servicio para formatear imágenes
   GooglePlacesService get placesService => _placesService;
@@ -171,30 +179,49 @@ class TurismoViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Carga los detalles desde Google Places
+  /// Carga los detalles desde Google Places y el promedio de reseñas de la app
   Future<void> cargarDetallesLugar(SitioTuristico sitio) async {
     _cargandoDetalles = true;
+    _cargandoPromedio = true;
     _detalleActual = null;
+    _promedioResenas = null;
     notifyListeners();
 
-    try {
-      // 1. Buscar el place_id
-      final placeId = await _placesService.buscarLugarId(
-        sitio.nombre, 
-        sitio.latitud, 
-        sitio.longitud
-      );
+    // Cargar detalles de Google Places y promedio de reseñas en paralelo
+    final idLugar = sitio.nombre.toLowerCase().replaceAll(' ', '_');
 
-      if (placeId != null) {
-        // 2. Obtener los detalles
-        _detalleActual = await _placesService.obtenerDetalles(placeId);
-      }
-    } catch (e) {
-      print('Error al cargar detalles: $e');
-    } finally {
-      _cargandoDetalles = false;
-      notifyListeners();
-    }
+    await Future.wait([
+      // Detalles de Google Places
+      () async {
+        try {
+          final placeId = await _placesService.buscarLugarId(
+            sitio.nombre,
+            sitio.latitud,
+            sitio.longitud,
+          );
+          if (placeId != null) {
+            _detalleActual = await _placesService.obtenerDetalles(placeId);
+          }
+        } catch (e) {
+          print('Error al cargar detalles de Places: $e');
+        } finally {
+          _cargandoDetalles = false;
+        }
+      }(),
+      // Promedio de reseñas propias
+      () async {
+        try {
+          _promedioResenas =
+              await _resenaService.obtenerPromedioResenas(idLugar);
+        } catch (e) {
+          print('Error al cargar promedio de reseñas: $e');
+        } finally {
+          _cargandoPromedio = false;
+        }
+      }(),
+    ]);
+
+    notifyListeners();
   }
 
   double obtenerDistancia(SitioTuristico sitio) {

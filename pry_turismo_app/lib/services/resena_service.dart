@@ -92,4 +92,30 @@ class ResenaService {
         .map((doc) => LugarModel.fromMap(doc.data(), doc.id))
         .toList();
   }
+
+  // ─────────────────────────────────────────────────────────
+  /// Calcula el promedio de calificaciones de un lugar.
+  /// Retorna [null] si el lugar no tiene ninguna reseña.
+  /// Retorna un [Map] con:
+  ///   - 'promedio': double
+  ///   - 'total': int
+  // ─────────────────────────────────────────────────────────
+  Future<Map<String, dynamic>?> obtenerPromedioResenas(
+      String idLugar) async {
+    final snapshot = await _col
+        .where('idLugar', isEqualTo: idLugar)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+
+    final calificaciones = snapshot.docs
+        .map((doc) => (doc.data()['calificacion'] as num).toInt())
+        .toList();
+
+    final total = calificaciones.length;
+    final suma = calificaciones.fold<int>(0, (prev, c) => prev + c);
+    final promedio = suma / total;
+
+    return {'promedio': promedio, 'total': total};
+  }
 }

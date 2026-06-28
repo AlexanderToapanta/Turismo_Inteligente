@@ -20,8 +20,10 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
     super.initState();
     // Iniciar la carga de detalles apenas se abre la pantalla
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TurismoViewModel>(context, listen: false)
-          .cargarDetallesLugar(widget.sitio);
+      Provider.of<TurismoViewModel>(
+        context,
+        listen: false,
+      ).cargarDetallesLugar(widget.sitio);
     });
   }
 
@@ -43,7 +45,9 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                 flexibleSpace: FlexibleSpaceBar(
                   background: (detalle != null && detalle.fotos.isNotEmpty)
                       ? Image.network(
-                          viewModel.placesService.obtenerUrlFoto(detalle.fotos.first),
+                          viewModel.placesService.obtenerUrlFoto(
+                            detalle.fotos.first,
+                          ),
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               _imagenPlaceholder(),
@@ -56,7 +60,10 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                         ),
                 ),
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: TemaPersona5.secondaryColor),
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: TemaPersona5.secondaryColor,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -79,23 +86,44 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                               ),
                             ),
                           ),
+                          // Badge de Google Places
                           if (detalle != null && detalle.rating > 0)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: TemaPersona5.secondaryColor,
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: TemaPersona5.primaryColor, width: 2),
+                                border: Border.all(
+                                  color: TemaPersona5.primaryColor,
+                                  width: 2,
+                                ),
                               ),
                               child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.star, color: TemaPersona5.primaryColor, size: 16),
-                                  const SizedBox(width: 4),
+                                  const Icon(
+                                    Icons.star,
+                                    color: TemaPersona5.primaryColor,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 3),
                                   Text(
-                                    detalle.rating.toString(),
+                                    detalle.rating.toStringAsFixed(1),
                                     style: GoogleFonts.poppins(
+                                      fontSize: 12,
                                       color: TemaPersona5.primaryColor,
                                       fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    'Google',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10,
+                                      color: TemaPersona5.primaryColor,
                                     ),
                                   ),
                                 ],
@@ -104,6 +132,9 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                         ],
                       ),
                       const SizedBox(height: 8),
+
+                      // Promedio de reseñas de la app
+                      _widgetPromedioResenas(viewModel),
                       // Categoría
                       Text(
                         widget.sitio.categoria,
@@ -121,10 +152,18 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                         child: ElevatedButton.icon(
                           onPressed: () {
                             viewModel.trazarRuta(widget.sitio);
-                            Navigator.pop(context); // Cerrar detalle y volver al mapa
+                            Navigator.pop(
+                              context,
+                            ); // Cerrar detalle y volver al mapa
                           },
-                          icon: const Icon(Icons.directions, color: TemaPersona5.secondaryColor),
-                          label: const Text('Navegar hacia acá', style: TextStyle(fontWeight: FontWeight.bold)),
+                          icon: const Icon(
+                            Icons.directions,
+                            color: TemaPersona5.secondaryColor,
+                          ),
+                          label: const Text(
+                            'Navegar hacia acá',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: TemaPersona5.primaryColor,
                             foregroundColor: TemaPersona5.secondaryColor,
@@ -141,7 +180,9 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                       if (cargando)
                         const Center(
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(TemaPersona5.primaryColor),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              TemaPersona5.primaryColor,
+                            ),
                           ),
                         ),
 
@@ -166,7 +207,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                           ),
                         if (detalle.horarios.isNotEmpty)
                           _seccionHorarios(detalle.horarios),
-                        
+
                         // Galería de fotos extra
                         if (detalle.fotos.length > 1) ...[
                           const SizedBox(height: 24),
@@ -190,7 +231,9 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(6),
                                     child: Image.network(
-                                      viewModel.placesService.obtenerUrlFoto(detalle.fotos[i+1]),
+                                      viewModel.placesService.obtenerUrlFoto(
+                                        detalle.fotos[i + 1],
+                                      ),
                                       width: 120,
                                       height: 120,
                                       fit: BoxFit.cover,
@@ -209,11 +252,17 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                             padding: const EdgeInsets.all(20),
                             child: Column(
                               children: [
-                                Icon(Icons.info_outline, color: TemaPersona5.textSecondary, size: 48),
+                                Icon(
+                                  Icons.info_outline,
+                                  color: TemaPersona5.textSecondary,
+                                  size: 48,
+                                ),
                                 const SizedBox(height: 8),
                                 Text(
                                   'Información detallada no disponible',
-                                  style: GoogleFonts.poppins(color: TemaPersona5.textSecondary),
+                                  style: GoogleFonts.poppins(
+                                    color: TemaPersona5.textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -230,11 +279,85 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
     );
   }
 
+  Widget _widgetPromedioResenas(TurismoViewModel viewModel) {
+    if (viewModel.cargandoPromedio) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 8.0),
+        child: SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: TemaPersona5.primaryColor,
+          ),
+        ),
+      );
+    }
+
+    final promedioData = viewModel.promedioResenas;
+
+    if (promedioData == null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Text(
+          'Aún no tiene reseñas asignadas',
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            color: TemaPersona5.textSecondary,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    final double promedio = promedioData['promedio'] as double;
+    final int total = promedioData['total'] as int;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: TemaPersona5.secondaryColor,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: TemaPersona5.primaryColor, width: 2),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.star, color: TemaPersona5.primaryColor, size: 14),
+            const SizedBox(width: 3),
+            Text(
+              promedio.toStringAsFixed(1),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: TemaPersona5.primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 3),
+            Text(
+              '($total reseñas de la app)',
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                color: TemaPersona5.primaryColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _imagenPlaceholder() {
     return Container(
       color: TemaPersona5.surfaceColor,
       child: const Center(
-        child: Icon(Icons.image_not_supported, size: 50, color: TemaPersona5.textSecondary),
+        child: Icon(
+          Icons.image_not_supported,
+          size: 50,
+          color: TemaPersona5.textSecondary,
+        ),
       ),
     );
   }
@@ -281,7 +404,11 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.access_time, color: TemaPersona5.primaryColor, size: 24),
+          const Icon(
+            Icons.access_time,
+            color: TemaPersona5.primaryColor,
+            size: 24,
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -296,16 +423,18 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...horarios.map((dia) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        dia,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: TemaPersona5.textSecondary,
-                        ),
+                ...horarios.map(
+                  (dia) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      dia,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: TemaPersona5.textSecondary,
                       ),
-                    )),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
