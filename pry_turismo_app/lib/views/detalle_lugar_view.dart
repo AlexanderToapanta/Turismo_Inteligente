@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../viewmodels/turismo_viewmodel.dart';
 import '../models/sitio_turistico.dart';
+import '../theme/tema_turismo.dart';
 
 class DetalleLugarView extends StatefulWidget {
   final SitioTuristico sitio;
@@ -32,12 +33,13 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
         final cargando = viewModel.cargandoDetalles;
 
         return Scaffold(
+          backgroundColor: TemaPersona5.backgroundColor,
           body: CustomScrollView(
             slivers: [
               SliverAppBar(
                 expandedHeight: 250,
                 pinned: true,
-                backgroundColor: const Color(0xFF0D7377),
+                backgroundColor: TemaPersona5.primaryColor,
                 flexibleSpace: FlexibleSpaceBar(
                   background: (detalle != null && detalle.fotos.isNotEmpty)
                       ? Image.network(
@@ -54,7 +56,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                         ),
                 ),
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: const Icon(Icons.arrow_back, color: TemaPersona5.secondaryColor),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -71,10 +73,9 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                           Expanded(
                             child: Text(
                               widget.sitio.nombre,
-                              style: GoogleFonts.poppins(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF0D7377),
+                              style: GoogleFonts.bebasNeue(
+                                fontSize: 32,
+                                color: TemaPersona5.primaryColor,
                               ),
                             ),
                           ),
@@ -82,17 +83,18 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.amber,
-                                borderRadius: BorderRadius.circular(12),
+                                color: TemaPersona5.secondaryColor,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: TemaPersona5.primaryColor, width: 2),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.star, color: Colors.white, size: 16),
+                                  const Icon(Icons.star, color: TemaPersona5.primaryColor, size: 16),
                                   const SizedBox(width: 4),
                                   Text(
                                     detalle.rating.toString(),
                                     style: GoogleFonts.poppins(
-                                      color: Colors.white,
+                                      color: TemaPersona5.primaryColor,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -107,7 +109,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                         widget.sitio.categoria,
                         style: GoogleFonts.poppins(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: TemaPersona5.textSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -121,14 +123,14 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                             viewModel.trazarRuta(widget.sitio);
                             Navigator.pop(context); // Cerrar detalle y volver al mapa
                           },
-                          icon: const Icon(Icons.directions),
-                          label: const Text('Navegar hacia acá'),
+                          icon: const Icon(Icons.directions, color: TemaPersona5.secondaryColor),
+                          label: const Text('Navegar hacia acá', style: TextStyle(fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0D7377),
-                            foregroundColor: Colors.white,
+                            backgroundColor: TemaPersona5.primaryColor,
+                            foregroundColor: TemaPersona5.secondaryColor,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                           ),
                         ),
@@ -139,7 +141,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                       if (cargando)
                         const Center(
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D7377)),
+                            valueColor: AlwaysStoppedAnimation<Color>(TemaPersona5.primaryColor),
                           ),
                         ),
 
@@ -170,10 +172,9 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                           const SizedBox(height: 24),
                           Text(
                             'Fotos',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1A1A1A),
+                            style: GoogleFonts.bebasNeue(
+                              fontSize: 24,
+                              color: TemaPersona5.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -187,7 +188,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 12),
                                   child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(6),
                                     child: Image.network(
                                       viewModel.placesService.obtenerUrlFoto(detalle.fotos[i+1]),
                                       width: 120,
@@ -208,11 +209,11 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                             padding: const EdgeInsets.all(20),
                             child: Column(
                               children: [
-                                Icon(Icons.info_outline, color: Colors.grey[400], size: 48),
+                                Icon(Icons.info_outline, color: TemaPersona5.textSecondary, size: 48),
                                 const SizedBox(height: 8),
                                 Text(
                                   'Información detallada no disponible',
-                                  style: GoogleFonts.poppins(color: Colors.grey[600]),
+                                  style: GoogleFonts.poppins(color: TemaPersona5.textSecondary),
                                 ),
                               ],
                             ),
@@ -231,9 +232,9 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
 
   Widget _imagenPlaceholder() {
     return Container(
-      color: Colors.grey[300],
+      color: TemaPersona5.surfaceColor,
       child: const Center(
-        child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+        child: Icon(Icons.image_not_supported, size: 50, color: TemaPersona5.textSecondary),
       ),
     );
   }
@@ -244,7 +245,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icono, color: const Color(0xFF0D7377), size: 24),
+          Icon(icono, color: TemaPersona5.primaryColor, size: 24),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -255,7 +256,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: TemaPersona5.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -263,7 +264,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                   contenido,
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: TemaPersona5.textSecondary,
                   ),
                 ),
               ],
@@ -280,7 +281,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.access_time, color: Color(0xFF0D7377), size: 24),
+          const Icon(Icons.access_time, color: TemaPersona5.primaryColor, size: 24),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -291,7 +292,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: TemaPersona5.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -301,7 +302,7 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
                         dia,
                         style: GoogleFonts.poppins(
                           fontSize: 13,
-                          color: Colors.grey[600],
+                          color: TemaPersona5.textSecondary,
                         ),
                       ),
                     )),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../viewmodels/turismo_viewmodel.dart';
 import 'detalle_lugar_view.dart';
+import '../theme/tema_turismo.dart';
 
 class ListaSitiosView extends StatelessWidget {
   const ListaSitiosView({super.key});
@@ -17,7 +18,7 @@ class ListaSitiosView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D7377)),
+                  valueColor: AlwaysStoppedAnimation<Color>(TemaPersona5.primaryColor),
                   strokeWidth: 3,
                 ),
                 const SizedBox(height: 16),
@@ -25,7 +26,7 @@ class ListaSitiosView extends StatelessWidget {
                   'Cargando lugares cercanos...',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: TemaPersona5.textSecondary,
                   ),
                 ),
               ],
@@ -43,15 +44,14 @@ class ListaSitiosView extends StatelessWidget {
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: TemaPersona5.primaryColor.withOpacity(0.8),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Error al cargar',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[700],
+                    style: GoogleFonts.bebasNeue(
+                      fontSize: 24,
+                      color: TemaPersona5.primaryColor,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -59,8 +59,8 @@ class ListaSitiosView extends StatelessWidget {
                     viewModel.error ?? 'Error desconocido',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.grey[500],
+                      fontSize: 14,
+                      color: TemaPersona5.textSecondary,
                     ),
                   ),
                 ],
@@ -79,15 +79,14 @@ class ListaSitiosView extends StatelessWidget {
                   Icon(
                     Icons.location_off_rounded,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: TemaPersona5.textSecondary,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No hay lugares cercanos',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[700],
+                    style: GoogleFonts.bebasNeue(
+                      fontSize: 24,
+                      color: TemaPersona5.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -95,8 +94,8 @@ class ListaSitiosView extends StatelessWidget {
                     'Intenta moverte a una zona turística',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.grey[500],
+                      fontSize: 14,
+                      color: TemaPersona5.textSecondary,
                     ),
                   ),
                 ],
@@ -127,10 +126,7 @@ class ListaSitiosView extends StatelessWidget {
                 final direccion = viewModel.obtenerDireccionCardinal(sitio);
 
                 return Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  // El Card Theme ya está configurado en TemaPersona5 (borde rojo, fondo oscuro)
                   child: InkWell(
                     onTap: () {
                       Navigator.push(
@@ -140,7 +136,7 @@ class ListaSitiosView extends StatelessWidget {
                         ),
                       );
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(6),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -148,14 +144,14 @@ class ListaSitiosView extends StatelessWidget {
                         Expanded(
                           flex: 3,
                           child: ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
                             child: Image.network(
                               sitio.imagenUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
-                                    color: Colors.grey[300],
-                                    child: const Icon(Icons.image_not_supported),
+                                    color: TemaPersona5.surfaceColor,
+                                    child: const Icon(Icons.image_not_supported, color: TemaPersona5.textSecondary),
                                   ),
                             ),
                           ),
@@ -172,10 +168,9 @@ class ListaSitiosView extends StatelessWidget {
                                   sitio.nombre,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF1A1A1A),
+                                  style: GoogleFonts.bebasNeue(
+                                    fontSize: 20,
+                                    color: TemaPersona5.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -185,7 +180,7 @@ class ListaSitiosView extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.poppins(
                                     fontSize: 10,
-                                    color: Colors.grey[600],
+                                    color: TemaPersona5.textSecondary,
                                   ),
                                 ),
                                 const Spacer(),
@@ -194,8 +189,8 @@ class ListaSitiosView extends StatelessWidget {
                                   children: [
                                     const Icon(
                                       Icons.location_on,
-                                      size: 12,
-                                      color: Color(0xFF0D7377),
+                                      size: 14,
+                                      color: TemaPersona5.primaryColor,
                                     ),
                                     const SizedBox(width: 4),
                                     Expanded(
@@ -204,9 +199,9 @@ class ListaSitiosView extends StatelessWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: GoogleFonts.poppins(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF0D7377),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: TemaPersona5.primaryColor,
                                         ),
                                       ),
                                     ),
@@ -217,9 +212,9 @@ class ListaSitiosView extends StatelessWidget {
                                 Row(
                                   children: [
                                     const Icon(
-                                      Icons.compass_calibration,
-                                      size: 12,
-                                      color: Color(0xFFFFA500),
+                                      Icons.explore,
+                                      size: 14,
+                                      color: TemaPersona5.secondaryColor,
                                     ),
                                     const SizedBox(width: 4),
                                     Expanded(
@@ -228,9 +223,9 @@ class ListaSitiosView extends StatelessWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: GoogleFonts.poppins(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFFFFA500),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: TemaPersona5.secondaryColor,
                                         ),
                                       ),
                                     ),
@@ -258,13 +253,14 @@ class ListaSitiosView extends StatelessWidget {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0D7377),
-                    borderRadius: BorderRadius.circular(8),
+                    color: TemaPersona5.primaryColor,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: TemaPersona5.secondaryColor, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withOpacity(0.5),
                         blurRadius: 8,
-                        offset: const Offset(0, 2),
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -277,7 +273,7 @@ class ListaSitiosView extends StatelessWidget {
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                            TemaPersona5.secondaryColor,
                           ),
                         ),
                       ),
@@ -286,7 +282,8 @@ class ListaSitiosView extends StatelessWidget {
                         'Actualizando lugares...',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
-                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          color: TemaPersona5.secondaryColor,
                         ),
                       ),
                     ],

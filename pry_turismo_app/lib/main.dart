@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'viewmodels/turismo_viewmodel.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/resena_viewmodel.dart';
 import 'views/home_view.dart';
 import 'views/login_view.dart';
+import 'views/welcome_view.dart';
 import 'theme/tema_turismo.dart';
 
 void main() async {
@@ -14,11 +16,17 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await initializeDateFormatting('es', null);
-  runApp(const MyApp());
+  
+  final prefs = await SharedPreferences.getInstance();
+  final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+
+  runApp(MyApp(hasSeenOnboarding: hasSeenOnboarding));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool hasSeenOnboarding;
+
+  const MyApp({super.key, required this.hasSeenOnboarding});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +41,7 @@ class MyApp extends StatelessWidget {
         title: 'Turismo Local App',
         debugShowCheckedModeBanner: false,
         theme: TemaPersona5.temaClaro,
-        home: const AuthChecker(),
+        home: hasSeenOnboarding ? const AuthChecker() : const WelcomeView(),
       ),
     );
   }
