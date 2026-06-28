@@ -33,18 +33,20 @@ class LugaresRealesService {
 
       final List<SitioTuristico> lugares = [];
 
-      // Lista de búsquedas por categoría - varias queries para obtener diversidad
-      final queries = [
-        'tourist attraction',
-        'museum',
-        'park',
-        'historic',
-        'viewpoint',
-        'artwork',
-        'monument',
+      // Lista de búsquedas por categoría
+      final consultasPorCategoria = [
+        {'cat': 'Cultura', 'q': 'museum'},
+        {'cat': 'Cultura', 'q': 'historic'},
+        {'cat': 'Naturaleza', 'q': 'park'},
+        {'cat': 'Naturaleza', 'q': 'viewpoint'},
+        {'cat': 'Comida', 'q': 'restaurant'},
+        {'cat': 'Hoteles', 'q': 'hotel'},
+        {'cat': 'Cultura', 'q': 'tourist attraction'},
       ];
 
-      for (String query in queries) {
+      for (var consulta in consultasPorCategoria) {
+        String query = consulta['q']!;
+        String categoria = consulta['cat']!;
         try {
           final response = await http.get(
             Uri.parse(_nominatimUrl).replace(
@@ -64,7 +66,7 @@ class LugaresRealesService {
 
           if (response.statusCode == 200) {
             final data = json.decode(response.body) as List;
-            print('Query "$query": ${data.length} resultados');
+            print('Query "$query" ($categoria): ${data.length} resultados');
 
             for (var item in data) {
               if (item['lat'] != null && item['lon'] != null) {
@@ -81,7 +83,8 @@ class LugaresRealesService {
                       descripcion: (item['type'] ?? 'Lugar de interés').toString(),
                       latitud: sitioLat,
                       longitud: sitioLon,
-                      imagenUrl: _obtenerIconoSegunTipo(item['type'] ?? ''),
+                      imagenUrl: _obtenerIconoSegunCategoria(categoria),
+                      categoria: categoria,
                     ),
                   );
                   print('  ✅ ${item['name']} (${(dist / 1000).toStringAsFixed(2)} km)');
@@ -137,22 +140,19 @@ class LugaresRealesService {
     return listaNuevo.take(20).toList(); // Limitar a 20 lugares
   }
 
-  /// Obtiene un ícono/URL basado en el tipo de lugar (desde Nominatim)
-  String _obtenerIconoSegunTipo(String tipo) {
-    tipo = tipo.toLowerCase();
-
-    if (tipo.contains('museum')) {
-      return 'https://images.unsplash.com/photo-1503174971373-b1f69850bbd6?w=400&h=400&fit=crop';
-    } else if (tipo.contains('park') || tipo.contains('garden')) {
-      return 'https://images.unsplash.com/photo-1549144464-f6eb00924190?w=400&h=400&fit=crop';
-    } else if (tipo.contains('monument') || tipo.contains('historic')) {
-      return 'https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?w=400&h=400&fit=crop';
-    } else if (tipo.contains('viewpoint') || tipo.contains('view')) {
-      return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&h=400&fit=crop';
-    } else if (tipo.contains('tourist') || tipo.contains('attraction')) {
-      return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=400&fit=crop';
-    } else {
-      return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=400&fit=crop';
+  /// Obtiene un ícono/URL basado en la categoría
+  String _obtenerIconoSegunCategoria(String categoria) {
+    switch (categoria) {
+      case 'Hoteles':
+        return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=400&fit=crop';
+      case 'Comida':
+        return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=400&fit=crop';
+      case 'Cultura':
+        return 'https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?w=400&h=400&fit=crop';
+      case 'Naturaleza':
+        return 'https://images.unsplash.com/photo-1549144464-f6eb00924190?w=400&h=400&fit=crop';
+      default:
+        return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=400&fit=crop';
     }
   }
 

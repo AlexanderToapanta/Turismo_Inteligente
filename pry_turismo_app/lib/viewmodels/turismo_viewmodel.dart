@@ -3,12 +3,15 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/sitio_turistico.dart';
+import '../models/detalle_lugar.dart';
 import '../services/turismo_service.dart';
 import '../services/ruta_service.dart';
+import '../services/google_places_service.dart';
 
 class TurismoViewModel extends ChangeNotifier {
   final TurismoService _service = TurismoService();
   final RutaService _rutaService = RutaService();
+  final GooglePlacesService _placesService = GooglePlacesService();
 
   Position? _posicionActual;
   List<SitioTuristico> _sitiosCercanos = [];
@@ -21,6 +24,13 @@ class TurismoViewModel extends ChangeNotifier {
   List<LatLng> _puntosRuta = [];
   SitioTuristico? _sitioSeleccionado;
 
+  // Detalles de Google Places
+  bool _cargandoDetalles = false;
+  DetalleLugar? _detalleActual;
+
+  String _categoriaSeleccionada = 'Todos';
+  final List<String> categorias = ['Todos', 'Hoteles', 'Comida', 'Cultura', 'Naturaleza'];
+
   // Para la brújula: azimut hacia el sitio seleccionado
   double? _azimutHaciaSitio;
 
@@ -29,10 +39,32 @@ class TurismoViewModel extends ChangeNotifier {
   double? get rumbo => _rumbo;
   bool get cargando => _cargando;
   bool get cargandoLugares => _cargandoLugares;
+  bool get cargandoDetalles => _cargandoDetalles;
   String? get error => _error;
   List<LatLng> get puntosRuta => _puntosRuta;
   SitioTuristico? get sitioSeleccionado => _sitioSeleccionado;
+  DetalleLugar? get detalleActual => _detalleActual;
   double? get azimutHaciaSitio => _azimutHaciaSitio;
+  String get categoriaSeleccionada => _categoriaSeleccionada;
+  
+  // Acceso al servicio para formatear imágenes
+  GooglePlacesService get placesService => _placesService;
+
+  List<SitioTuristico> get sitiosFiltrados {
+    if (_categoriaSeleccionada == 'Todos') {
+      return _sitiosCercanos;
+    }
+    return _sitiosCercanos
+        .where((sitio) => sitio.categoria == _categoriaSeleccionada)
+        .toList();
+  }
+
+  void cambiarCategoria(String nuevaCategoria) {
+    if (categorias.contains(nuevaCategoria)) {
+      _categoriaSeleccionada = nuevaCategoria;
+      notifyListeners();
+    }
+  }
 
   TurismoViewModel() {
     inicializar();
@@ -137,6 +169,32 @@ class TurismoViewModel extends ChangeNotifier {
     _sitioSeleccionado = null;
     _azimutHaciaSitio = null;
     notifyListeners();
+  }
+
+  /// Carga los detalles desde Google Places
+  Future<void> cargarDetallesLugar(SitioTuristico sitio) async {
+    _cargandoDetalles = true;
+    _detalleActual = null;
+    notifyListeners();
+
+    try {
+      // 1. Buscar el place_id
+      final placeId = await _placesService.buscarLugarId(
+        sitio.nombre, 
+        sitio.latitud, 
+        sitio.longitud
+      );
+
+      if (placeId != null) {
+        // 2. Obtener los detalles
+        _detalleActual = await _placesService.obtenerDetalles(placeId);
+      }
+    } catch (e) {
+      print('Error al cargar detalles: $e');
+    } finally {
+      _cargandoDetalles = false;
+      notifyListeners();
+    }
   }
 
   double obtenerDistancia(SitioTuristico sitio) {

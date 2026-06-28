@@ -23,7 +23,7 @@ class _HomeViewState extends State<HomeView> {
   // Orden: Reseñas | Agregar | MAPA (centro) | Fotos | Rutas
   final List<_NavItem> _items = const [
     _NavItem(icon: Icons.list_alt_rounded,  label: 'Reseñas',  isCenter: false),
-    _NavItem(icon: Icons.add_rounded,        label: 'Agregar',  isCenter: false),
+    _NavItem(icon: Icons.place_rounded,      label: 'Lugares',  isCenter: false),
     _NavItem(icon: Icons.map_rounded,        label: 'Mapa',     isCenter: true),
     _NavItem(icon: Icons.camera_alt_rounded, label: 'Fotos',    isCenter: false),
     _NavItem(icon: Icons.navigation_rounded, label: 'Rutas',    isCenter: false),

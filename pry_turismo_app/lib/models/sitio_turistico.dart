@@ -4,6 +4,7 @@ class SitioTuristico {
   final double latitud;
   final double longitud;
   final String imagenUrl;
+  final String categoria;
 
   SitioTuristico({
     required this.nombre,
@@ -11,6 +12,7 @@ class SitioTuristico {
     required this.latitud,
     required this.longitud,
     required this.imagenUrl,
+    this.categoria = 'Otro',
   });
 
   // Obtener dirección cardinal desde coordenadas
@@ -26,13 +28,15 @@ class SitioTuristico {
     return other is SitioTuristico &&
       other.nombre == nombre &&
       other.latitud == latitud &&
-      other.longitud == longitud;
+      other.longitud == longitud &&
+      other.categoria == categoria;
   }
 
   @override
   int get hashCode {
     return nombre.hashCode ^
       latitud.hashCode ^
-      longitud.hashCode;
+      longitud.hashCode ^
+      categoria.hashCode;
   }
 }

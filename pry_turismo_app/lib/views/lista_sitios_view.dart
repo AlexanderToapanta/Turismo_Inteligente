@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../viewmodels/turismo_viewmodel.dart';
+import 'detalle_lugar_view.dart';
 
 class ListaSitiosView extends StatelessWidget {
   const ListaSitiosView({super.key});
@@ -106,182 +107,140 @@ class ListaSitiosView extends StatelessWidget {
 
         return Stack(
           children: [
-            ListView.builder(
-              itemCount: viewModel.sitiosCercanos.length,
+            GridView.builder(
+              itemCount: viewModel.sitiosFiltrados.length,
               padding: const EdgeInsets.only(
                 left: 12,
                 right: 12,
                 top: 12,
                 bottom: 100, // Evitar solapamiento con el BottomNavigationBar
               ),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.75, // Ajustar la relación de aspecto para que quepa la información
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
               itemBuilder: (context, index) {
-                final sitio = viewModel.sitiosCercanos[index];
+                final sitio = viewModel.sitiosFiltrados[index];
                 final distancia = viewModel.obtenerDistancia(sitio);
                 final direccion = viewModel.obtenerDireccionCardinal(sitio);
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: InkWell(
-                      onTap: () => _mostrarDetalleSitio(context, viewModel, sitio),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Imagen
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                sitio.imagenUrl,
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                      width: 80,
-                                      height: 80,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[300],
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(Icons.image_not_supported),
-                                    ),
-                              ),
+                return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetalleLugarView(sitio: sitio),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Imagen
+                        Expanded(
+                          flex: 3,
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                            child: Image.network(
+                              sitio.imagenUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    color: Colors.grey[300],
+                                    child: const Icon(Icons.image_not_supported),
+                                  ),
                             ),
-                            const SizedBox(width: 12),
-                            // Contenido
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    sitio.nombre,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF1A1A1A),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    sitio.descripcion,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      // Distancia
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF0D7377)
-                                              .withOpacity(0.15),
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.location_on,
-                                              size: 12,
-                                              color: Color(0xFF0D7377),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              viewModel
-                                                  .formatearDistancia(
-                                                      distancia),
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w600,
-                                                color:
-                                                    const Color(0xFF0D7377),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      // Dirección
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFFFA500)
-                                              .withOpacity(0.15),
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.compass_calibration,
-                                              size: 12,
-                                              color: Color(0xFFFFA500),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              direccion,
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w600,
-                                                color:
-                                                    const Color(0xFFFFA500),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Botón de navegación
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                          ),
+                        ),
+                        // Contenido
+                        Expanded(
+                          flex: 4,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () => viewModel.trazarRuta(sitio),
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Icon(
-                                        Icons.navigation_rounded,
-                                        color: const Color(0xFF0D7377),
-                                        size: 20,
+                                Text(
+                                  sitio.nombre,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1A1A1A),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  sitio.descripcion,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const Spacer(),
+                                // Distancia
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.location_on,
+                                      size: 12,
+                                      color: Color(0xFF0D7377),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        viewModel.formatearDistancia(distancia),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF0D7377),
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                // Dirección
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.compass_calibration,
+                                      size: 12,
+                                      color: Color(0xFFFFA500),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        direccion,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFFFFA500),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 );
@@ -337,210 +296,6 @@ class ListaSitiosView extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  void _mostrarDetalleSitio(
-    BuildContext context,
-    TurismoViewModel vm,
-    dynamic sitio,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        contentPadding: EdgeInsets.zero,
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Imagen de encabezado
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
-                    child: Image.network(
-                      sitio.imagenUrl,
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Container(
-                            height: 200,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image_not_supported),
-                          ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Material(
-                      color: Colors.white,
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        onTap: () => Navigator.pop(context),
-                        borderRadius: BorderRadius.circular(20),
-                        child: const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Icon(
-                            Icons.close,
-                            size: 20,
-                            color: Color(0xFF0D7377),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              // Contenido
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Título
-                    Text(
-                      sitio.nombre,
-                      style: GoogleFonts.poppins(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0D7377),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Descripción
-                    Text(
-                      'Descripción',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      sitio.descripcion,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Ubicación
-                    Text(
-                      'Ubicación',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on,
-                          size: 16,
-                          color: Color(0xFF0D7377),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            '${sitio.latitud.toStringAsFixed(4)}, ${sitio.longitud.toStringAsFixed(4)}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Distancia y Dirección
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Distancia',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                vm.formatearDistancia(
-                                  vm.obtenerDistancia(sitio),
-                                ),
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF0D7377),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Dirección',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                vm.obtenerDireccionCardinal(sitio),
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFFFA500),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    // Botón de navegación
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          vm.trazarRuta(sitio);
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(Icons.directions),
-                        label: const Text('Navegar a este lugar'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          backgroundColor: const Color(0xFF0D7377),
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

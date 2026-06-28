@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../viewmodels/turismo_viewmodel.dart';
+import 'detalle_lugar_view.dart';
 
 class MapaView extends StatelessWidget {
   const MapaView({super.key});
@@ -80,7 +81,7 @@ class MapaView extends StatelessWidget {
                       ),
                     ),
                     // Marcadores de Sitios
-                    ...viewModel.sitiosCercanos.map((sitio) {
+                    ...viewModel.sitiosFiltrados.map((sitio) {
                       final esSitioSeleccionado =
                           viewModel.sitioSeleccionado?.nombre == sitio.nombre;
                       return Marker(
@@ -141,55 +142,107 @@ class MapaView extends StatelessWidget {
                 ),
               ),
 
-            // Información superior
+            // Información superior con filtros
             Positioned(
               top: 16,
               left: 16,
               right: 16,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Lugares cercanos',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${viewModel.sitiosCercanos.length} sitios',
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0D7377),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Explora tu entorno',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF0D7377),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${viewModel.sitiosFiltrados.length} resultados encontrados',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0D7377).withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.explore_outlined,
+                            color: Color(0xFF0D7377),
+                            size: 28,
                           ),
                         ),
                       ],
                     ),
-                    Icon(
-                      Icons.location_on_outlined,
-                      color: const Color(0xFF0D7377),
-                      size: 32,
+                  ),
+                  const SizedBox(height: 12),
+                  // Lista horizontal de categorías
+                  SizedBox(
+                    height: 40,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: viewModel.categorias.length,
+                      itemBuilder: (context, index) {
+                        final categoria = viewModel.categorias[index];
+                        final isSelected = viewModel.categoriaSeleccionada == categoria;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: ChoiceChip(
+                            label: Text(
+                              categoria,
+                              style: GoogleFonts.poppins(
+                                color: isSelected ? Colors.white : const Color(0xFF0D7377),
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              ),
+                            ),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) {
+                                viewModel.cambiarCategoria(categoria);
+                              }
+                            },
+                            backgroundColor: Colors.white,
+                            selectedColor: const Color(0xFF0D7377),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(
+                                color: isSelected ? Colors.transparent : const Color(0xFF0D7377).withOpacity(0.5),
+                              ),
+                            ),
+                            elevation: isSelected ? 4 : 2,
+                            shadowColor: Colors.black.withOpacity(0.2),
+                          ),
+                        );
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
 
@@ -371,22 +424,46 @@ class MapaView extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              // Botón de navegación
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    vm.trazarRuta(sitio);
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.directions),
-                  label: const Text('Navegar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0D7377),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+              // Botones de acción
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context); // Cerrar el bottom sheet
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DetalleLugarView(sitio: sitio),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.info_outline),
+                      label: const Text('Detalles'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF0D7377),
+                        side: const BorderSide(color: Color(0xFF0D7377)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        vm.trazarRuta(sitio);
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.directions),
+                      label: const Text('Navegar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0D7377),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
