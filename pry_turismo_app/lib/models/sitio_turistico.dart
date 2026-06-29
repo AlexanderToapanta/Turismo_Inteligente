@@ -5,6 +5,10 @@ class SitioTuristico {
   final double longitud;
   final String imagenUrl;
   final String categoria;
+  // Campos extra para sugerencias aprobadas de Firebase
+  final bool esSugerencia;
+  final String? horario;
+  final String? sugerenciaId;
 
   SitioTuristico({
     required this.nombre,
@@ -13,6 +17,9 @@ class SitioTuristico {
     required this.longitud,
     required this.imagenUrl,
     this.categoria = 'Otro',
+    this.esSugerencia = false,
+    this.horario,
+    this.sugerenciaId,
   });
 
   // Obtener dirección cardinal desde coordenadas

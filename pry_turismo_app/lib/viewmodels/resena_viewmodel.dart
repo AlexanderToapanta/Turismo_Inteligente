@@ -60,6 +60,19 @@ class ResenaViewModel extends ChangeNotifier {
   }
 
   // ─────────────────────────────────────────────────────────
+  /// Elimina una reseña y recarga la lista.
+  // ─────────────────────────────────────────────────────────
+  Future<void> eliminarResena(String idResena) async {
+    try {
+      await _resenaService.eliminarResena(idResena);
+      await cargarResenas();
+    } catch (e) {
+      _error = 'Error al eliminar reseña: $e';
+      notifyListeners();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
   // Setters del formulario
   // ─────────────────────────────────────────────────────────
   void seleccionarLugar(SitioTuristico sitio) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../viewmodels/auth_viewmodel.dart';
 import '../models/resena_model.dart';
 import '../theme/tema_turismo.dart';
 import '../viewmodels/resena_viewmodel.dart';
@@ -114,6 +115,8 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
+    final isAdmin = authViewModel.usuarioModel?.rol == 'administrador';
     final fechaFormateada =
         DateFormat('d MMM yyyy', 'es').format(resena.fecha);
 
@@ -200,6 +203,32 @@ class _ReviewCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.labelMedium),
                   ],
                 ),
+                if (isAdmin) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () async {
+                          final confirmar = await _mostrarDialogoEliminarResena(context);
+                          if (confirmar == true) {
+                            await context.read<ResenaViewModel>().eliminarResena(resena.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Reseña eliminada'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.delete, size: 16, color: Colors.red),
+                        label: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -216,4 +245,90 @@ class _ReviewCard extends StatelessWidget {
       child: const Icon(Icons.image_outlined, size: 48, color: Color(0xFF444444)),
     );
   }
+}
+
+// ── Diálogo de confirmación con tema oscuro para reseñas ────
+Future<bool?> _mostrarDialogoEliminarResena(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => Dialog(
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.delete_outline, color: Colors.red, size: 28),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Eliminar reseña',
+              style: GoogleFonts.bebasNeue(
+                fontSize: 22,
+                color: Colors.white,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '¿Estás seguro de que deseas eliminar esta reseña? Esta acción no se puede deshacer.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: const Color(0xFFAAAAAA),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white70,
+                      side: const BorderSide(color: Color(0xFF444444)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      'Cancelar',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      'Eliminar',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

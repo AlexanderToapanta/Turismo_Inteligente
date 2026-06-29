@@ -156,7 +156,7 @@ class _CrearResenaViewState extends State<CrearResenaView> {
 
   // ─────────────────────────────────────────────────────────
   Widget _buildDropdownLugares(BuildContext context, ResenaViewModel vm) {
-    // Lee los lugares directamente del TurismoViewModel (OpenStreetMap)
+    // Lee todos los lugares: OSM + sugerencias aprobadas de Firebase
     final sitios = context.watch<TurismoViewModel>().sitiosCercanos;
     final cargando = context.watch<TurismoViewModel>().cargando;
 
@@ -176,10 +176,21 @@ class _CrearResenaViewState extends State<CrearResenaView> {
       items: sitios.map((SitioTuristico sitio) {
         return DropdownMenuItem<SitioTuristico>(
           value: sitio,
-          child: Text(
-            sitio.nombre,
-            style: Theme.of(context).textTheme.bodyLarge,
-            overflow: TextOverflow.ellipsis,
+          child: Row(
+            children: [
+              if (sitio.esSugerencia)
+                const Padding(
+                  padding: EdgeInsets.only(right: 6),
+                  child: Icon(Icons.add_location_alt, color: Colors.green, size: 16),
+                ),
+              Expanded(
+                child: Text(
+                  sitio.nombre,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         );
       }).toList(),

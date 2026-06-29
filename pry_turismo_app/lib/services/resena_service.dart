@@ -55,6 +55,13 @@ class ResenaService {
   }
 
   // ─────────────────────────────────────────────────────────
+  /// Elimina una reseña de Firestore dada su ID.
+  // ─────────────────────────────────────────────────────────
+  Future<void> eliminarResena(String idResena) async {
+    await _col.doc(idResena).delete();
+  }
+
+  // ─────────────────────────────────────────────────────────
   /// Obtiene todas las reseñas ordenadas por fecha descendente.
   // ─────────────────────────────────────────────────────────
   Future<List<ResenaModel>> obtenerResenas() async {

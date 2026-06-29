@@ -1,11 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../models/usuario_model.dart';
+import '../services/usuario_service.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final UsuarioService _usuarioService = UsuarioService();
 
   User? usuario;
+  UsuarioModel? usuarioModel;
   bool cargando = false;
   String mensaje = '';
   // Error específico del flujo de registro (usado en RegisterView)
@@ -13,10 +17,23 @@ class AuthViewModel extends ChangeNotifier {
 
   AuthViewModel() {
     usuario = _authService.currentUser;
+    if (usuario != null) {
+      _cargarUsuarioModel(usuario!.uid);
+    }
     _authService.authStateChanges.listen((User? user) {
       usuario = user;
-      notifyListeners();
+      if (user != null) {
+        _cargarUsuarioModel(user.uid);
+      } else {
+        usuarioModel = null;
+        notifyListeners();
+      }
     });
+  }
+
+  Future<void> _cargarUsuarioModel(String uid) async {
+    usuarioModel = await _usuarioService.obtenerUsuario(uid);
+    notifyListeners();
   }
 
   // ─────────────────────────────────────────────────────────
@@ -55,6 +72,7 @@ class AuthViewModel extends ChangeNotifier {
       );
 
       if (usuario != null) {
+        await _cargarUsuarioModel(usuario!.uid);
         mensaje = 'Cuenta creada correctamente';
       }
     } catch (e) {
@@ -80,6 +98,7 @@ class AuthViewModel extends ChangeNotifier {
       usuario = await _authService.signInWithGoogle();
 
       if (usuario != null) {
+        await _cargarUsuarioModel(usuario!.uid);
         mensaje = 'Sesión iniciada correctamente con Google';
       } else {
         mensaje = 'Inicio de sesión cancelado';
@@ -110,6 +129,7 @@ class AuthViewModel extends ChangeNotifier {
       usuario = await _authService.signInWithEmailAndPassword(email, password);
 
       if (usuario != null) {
+        await _cargarUsuarioModel(usuario!.uid);
         mensaje = 'Sesión iniciada correctamente';
       }
     } catch (e) {

@@ -3,144 +3,217 @@ import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import '../models/sitio_turistico.dart';
 
-/// Servicio para obtener sitios turísticos reales desde OpenStreetMap
+/// Servicio para obtener sitios turísticos reales desde OpenStreetMap usando Overpass API.
 class LugaresRealesService {
-  // URL de búsqueda de Nominatim (más compatible con navegadores)
-  static const String _nominatimUrl = 'https://nominatim.openstreetmap.org/search';
+  static const List<String> _overpassUrls = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.openstreetmap.ru/api/interpreter',
+  ];
 
-  /// Obtiene sitios turísticos cercanos basados en latitud y longitud
-  /// Utiliza Nominatim que es más web-friendly que Overpass
-  /// NOTA: En navegador desktop, la geolocalización es imprecisa (por IP)
-  /// En móvil, usa GPS nativo (mucho más preciso)
   Future<List<SitioTuristico>> obtenerLugaresCercanos(
     double latitud,
     double longitud, {
-    double radio = 5000,
+    double radio = 10000,
   }) async {
-    print('=== OBTENER LUGARES CERCANOS ===');
-    print('Latitud: $latitud, Longitud: $longitud');
-    print('Radio: ${(radio / 1000).toStringAsFixed(1)} km');
+    print('=== BUSCANDO EN OVERPASS ===');
+    print('Lat: $latitud, Lon: $longitud, Radio: $radio m');
+
+    final query =
+        '''
+[out:json][timeout:25];
+
+(
+  node["amenity"~"restaurant|cafe|fast_food|bar"](around:$radio,$latitud,$longitud);
+  way["amenity"~"restaurant|cafe|fast_food|bar"](around:$radio,$latitud,$longitud);
+
+  node["tourism"~"hotel|hostel|guest_house|motel"](around:$radio,$latitud,$longitud);
+  way["tourism"~"hotel|hostel|guest_house|motel"](around:$radio,$latitud,$longitud);
+
+  node["tourism"~"museum|attraction|gallery"](around:$radio,$latitud,$longitud);
+  way["tourism"~"museum|attraction|gallery"](around:$radio,$latitud,$longitud);
+
+  node["historic"](around:$radio,$latitud,$longitud);
+  way["historic"](around:$radio,$latitud,$longitud);
+
+  node["amenity"="place_of_worship"](around:$radio,$latitud,$longitud);
+  way["amenity"="place_of_worship"](around:$radio,$latitud,$longitud);
+
+  node["leisure"~"park|nature_reserve"](around:$radio,$latitud,$longitud);
+  way["leisure"~"park|nature_reserve"](around:$radio,$latitud,$longitud);
+
+  node["natural"~"peak|water|wood|cave_entrance"](around:$radio,$latitud,$longitud);
+  way["natural"~"peak|water|wood|cave_entrance"](around:$radio,$latitud,$longitud);
+
+  node["tourism"="viewpoint"](around:$radio,$latitud,$longitud);
+  way["tourism"="viewpoint"](around:$radio,$latitud,$longitud);
+);
+
+out center tags;
+''';
 
     try {
-      // Calcular bounding box en grados decimales
-      // 1 grado ≈ 111 km en latitud
-      final kmRadius = radio / 1000;
-      final deltaLat = kmRadius / 111.0;
-      final deltaLon = kmRadius / (111.0 * math.cos(latitud * math.pi / 180));
+      final response = await _consultarOverpass(query);
 
-      final bbox = '${longitud - deltaLon},${latitud - deltaLat},${longitud + deltaLon},${latitud + deltaLat}';
-      print('BBox: $bbox');
+      if (response == null) {
+        throw Exception('No se pudo conectar con ningún servidor Overpass.');
+      }
+
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Error Overpass final: ${response.statusCode} - ${response.body}',
+        );
+      }
+
+      final data = json.decode(response.body);
+      final elements = data['elements'] as List? ?? [];
 
       final List<SitioTuristico> lugares = [];
 
-      // Lista de búsquedas por categoría
-      final consultasPorCategoria = [
-        {'cat': 'Cultura', 'q': 'museum'},
-        {'cat': 'Cultura', 'q': 'historic'},
-        {'cat': 'Naturaleza', 'q': 'park'},
-        {'cat': 'Naturaleza', 'q': 'viewpoint'},
-        {'cat': 'Comida', 'q': 'restaurant'},
-        {'cat': 'Hoteles', 'q': 'hotel'},
-        {'cat': 'Cultura', 'q': 'tourist attraction'},
-      ];
+      for (final item in elements) {
+        final tags = item['tags'] ?? {};
 
-      for (var consulta in consultasPorCategoria) {
-        String query = consulta['q']!;
-        String categoria = consulta['cat']!;
-        try {
-          final response = await http.get(
-            Uri.parse(_nominatimUrl).replace(
-              queryParameters: {
-                'q': query,
-                'format': 'json',
-                'viewbox': bbox,
-                'bounded': '1', // Limitar a bbox
-                'limit': '10',
-                'accept-language': 'es',
-              },
-            ),
-            headers: {
-              'User-Agent': 'TurismoApp/1.0',
-            },
-          ).timeout(const Duration(seconds: 15));
-
-          if (response.statusCode == 200) {
-            final data = json.decode(response.body) as List;
-            print('Query "$query" ($categoria): ${data.length} resultados');
-
-            for (var item in data) {
-              if (item['lat'] != null && item['lon'] != null) {
-                final sitioLat = double.parse(item['lat'].toString());
-                final sitioLon = double.parse(item['lon'].toString());
-
-                // Validar que esté dentro del radio usando distancia Haversine
-                final dist = _calcularDistancia(latitud, longitud, sitioLat, sitioLon);
-                
-                if (dist <= radio) {
-                  lugares.add(
-                    SitioTuristico(
-                      nombre: (item['name'] ?? 'Lugar').toString(),
-                      descripcion: (item['type'] ?? 'Lugar de interés').toString(),
-                      latitud: sitioLat,
-                      longitud: sitioLon,
-                      imagenUrl: _obtenerIconoSegunCategoria(categoria),
-                      categoria: categoria,
-                    ),
-                  );
-                  print('  ✅ ${item['name']} (${(dist / 1000).toStringAsFixed(2)} km)');
-                } else {
-                  print('  ❌ Rechazado: ${item['name']} (${(dist / 1000).toStringAsFixed(2)} km)');
-                }
-              }
-            }
-          }
-        } catch (e) {
-          print('⚠️ Error en búsqueda "$query": $e');
+        final nombre = tags['name'];
+        if (nombre == null || nombre.toString().trim().isEmpty) {
           continue;
         }
+
+        final double? lat = item['lat'] != null
+            ? double.tryParse(item['lat'].toString())
+            : double.tryParse(item['center']?['lat']?.toString() ?? '');
+
+        final double? lon = item['lon'] != null
+            ? double.tryParse(item['lon'].toString())
+            : double.tryParse(item['center']?['lon']?.toString() ?? '');
+
+        if (lat == null || lon == null) continue;
+
+        final distancia = _calcularDistancia(latitud, longitud, lat, lon);
+        if (distancia > radio) continue;
+
+        final categoria = _obtenerCategoria(tags);
+
+        lugares.add(
+          SitioTuristico(
+            nombre: nombre.toString(),
+            descripcion: _obtenerDescripcion(tags),
+            latitud: lat,
+            longitud: lon,
+            imagenUrl: _obtenerIconoSegunCategoria(categoria),
+            categoria: categoria,
+          ),
+        );
       }
 
-      print('Total inicial: ${lugares.length}');
-
-      // Eliminar duplicados y ordenar por distancia
+      print('Lugares encontrados: ${lugares.length}');
       return _procesarElementos(lugares, latitud, longitud);
     } catch (e) {
-      print('❌ Error obteniendo lugares reales: $e');
+      print('Error obteniendo lugares desde Overpass: $e');
+      throw Exception('Error al conectar con el servidor: $e');
     }
-
-    return [];
   }
 
-  /// Procesa y limpia la lista de sitios
+  Future<http.Response?> _consultarOverpass(String query) async {
+    for (final url in _overpassUrls) {
+      try {
+        print('Probando servidor Overpass: $url');
+
+        final response = await http
+            .post(
+              Uri.parse(url),
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'TurismoApp/1.0',
+              },
+              body: {'data': query},
+            )
+            .timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          print('Servidor Overpass funcionando: $url');
+          return response;
+        }
+
+        print('Error Overpass en $url: ${response.statusCode}');
+      } catch (e) {
+        print('Fallo conexión Overpass en $url: $e');
+      }
+    }
+
+    return null;
+  }
+
+  String _obtenerCategoria(Map tags) {
+    final amenity = tags['amenity']?.toString();
+    final tourism = tags['tourism']?.toString();
+    final leisure = tags['leisure']?.toString();
+    final natural = tags['natural']?.toString();
+    final historic = tags['historic']?.toString();
+
+    if (amenity == 'restaurant' ||
+        amenity == 'cafe' ||
+        amenity == 'fast_food' ||
+        amenity == 'bar') {
+      return 'Comida';
+    }
+
+    if (tourism == 'hotel' ||
+        tourism == 'hostel' ||
+        tourism == 'guest_house' ||
+        tourism == 'motel') {
+      return 'Hoteles';
+    }
+
+    if (historic != null ||
+        tourism == 'museum' ||
+        tourism == 'gallery' ||
+        tourism == 'attraction' ||
+        amenity == 'place_of_worship') {
+      return 'Cultura';
+    }
+
+    if (leisure == 'park' ||
+        leisure == 'nature_reserve' ||
+        natural != null ||
+        tourism == 'viewpoint') {
+      return 'Naturaleza';
+    }
+
+    return 'Cultura';
+  }
+
+  String _obtenerDescripcion(Map tags) {
+    if (tags['tourism'] != null) return 'Turismo: ${tags['tourism']}';
+    if (tags['amenity'] != null) return 'Servicio: ${tags['amenity']}';
+    if (tags['historic'] != null) return 'Histórico: ${tags['historic']}';
+    if (tags['leisure'] != null) return 'Recreación: ${tags['leisure']}';
+    if (tags['natural'] != null) return 'Natural: ${tags['natural']}';
+    return 'Lugar de interés';
+  }
+
   List<SitioTuristico> _procesarElementos(
     List<SitioTuristico> lugares,
     double refLat,
     double refLon,
   ) {
-    // Eliminar duplicados por nombre (case-insensitive)
-    final Map<String, SitioTuristico> uniqueLugares = {};
-    for (var sitio in lugares) {
-      final clave = sitio.nombre.toLowerCase();
-      if (!uniqueLugares.containsKey(clave)) {
-        uniqueLugares[clave] = sitio;
-      }
+    final Map<String, SitioTuristico> unicos = {};
+
+    for (final sitio in lugares) {
+      final clave = sitio.nombre.toLowerCase().trim();
+      unicos[clave] = sitio;
     }
 
-    final List<SitioTuristico> listaNuevo = uniqueLugares.values.toList();
+    final lista = unicos.values.toList();
 
-    // Ordenar por distancia desde la referencia
-    listaNuevo.sort((a, b) {
-      double distA = _calcularDistancia(refLat, refLon, a.latitud, a.longitud);
-      double distB = _calcularDistancia(refLat, refLon, b.latitud, b.longitud);
+    lista.sort((a, b) {
+      final distA = _calcularDistancia(refLat, refLon, a.latitud, a.longitud);
+      final distB = _calcularDistancia(refLat, refLon, b.latitud, b.longitud);
       return distA.compareTo(distB);
     });
 
-    print('Sitios encontrados (sin duplicados): ${listaNuevo.length}');
-
-    return listaNuevo.take(20).toList(); // Limitar a 20 lugares
+    return lista.take(50).toList();
   }
 
-  /// Obtiene un ícono/URL basado en la categoría
   String _obtenerIconoSegunCategoria(String categoria) {
     switch (categoria) {
       case 'Hoteles':
@@ -156,16 +229,23 @@ class LugaresRealesService {
     }
   }
 
-  /// Calcula distancia entre dos puntos usando la fórmula de Haversine
-  double _calcularDistancia(double lat1, double lon1, double lat2, double lon2) {
-    const double R = 6371000; // Radio de la Tierra en metros
-    final double dLat = (lat2 - lat1) * math.pi / 180;
-    final double dLon = (lon2 - lon1) * math.pi / 180;
-    final double a = math.pow(math.sin(dLat / 2), 2) +
+  double _calcularDistancia(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const double r = 6371000;
+    final dLat = (lat2 - lat1) * math.pi / 180;
+    final dLon = (lon2 - lon1) * math.pi / 180;
+
+    final a =
+        math.pow(math.sin(dLat / 2), 2) +
         math.cos(lat1 * math.pi / 180) *
             math.cos(lat2 * math.pi / 180) *
             math.pow(math.sin(dLon / 2), 2);
-    final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-    return R * c;
+
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return r * c;
   }
 }

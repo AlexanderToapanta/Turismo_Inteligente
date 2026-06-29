@@ -7,7 +7,8 @@ import '../viewmodels/turismo_viewmodel.dart';
 import 'detalle_lugar_view.dart';
 
 class MapaView extends StatelessWidget {
-  const MapaView({super.key});
+  final VoidCallback? onExplorarTap;
+  const MapaView({super.key, this.onExplorarTap});
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +85,9 @@ class MapaView extends StatelessWidget {
                     ...viewModel.sitiosFiltrados.map((sitio) {
                       final esSitioSeleccionado =
                           viewModel.sitioSeleccionado?.nombre == sitio.nombre;
+                      final color = sitio.esSugerencia
+                          ? Colors.green
+                          : Colors.red;
                       return Marker(
                         point: LatLng(sitio.latitud, sitio.longitud),
                         width: esSitioSeleccionado ? 60 : 50,
@@ -109,7 +113,7 @@ class MapaView extends StatelessWidget {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.orange.withOpacity(0.4),
+                                        color: color.withOpacity(0.4),
                                         blurRadius: 8,
                                         spreadRadius: 2,
                                       ),
@@ -117,10 +121,12 @@ class MapaView extends StatelessWidget {
                                   ),
                                 ),
                               Icon(
-                                Icons.location_on,
+                                sitio.esSugerencia
+                                    ? Icons.add_location_alt
+                                    : Icons.location_on,
                                 color: esSitioSeleccionado
                                     ? Colors.orange
-                                    : Colors.red,
+                                    : color,
                                 size: esSitioSeleccionado ? 45 : 35,
                               ),
                             ],
@@ -149,56 +155,59 @@ class MapaView extends StatelessWidget {
               right: 16,
               child: Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Explora tu entorno',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF0D7377),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${viewModel.sitiosFiltrados.length} resultados encontrados',
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0D7377).withOpacity(0.1),
-                            shape: BoxShape.circle,
+                  GestureDetector(
+                    onTap: onExplorarTap,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                          child: const Icon(
-                            Icons.explore_outlined,
-                            color: Color(0xFF0D7377),
-                            size: 28,
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Explora tu entorno',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF0D7377),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${viewModel.sitiosFiltrados.length} resultados encontrados',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0D7377).withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.explore_outlined,
+                              color: Color(0xFF0D7377),
+                              size: 28,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),

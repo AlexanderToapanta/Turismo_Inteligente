@@ -5,9 +5,12 @@ import '../viewmodels/auth_viewmodel.dart';
 import 'mapa_view.dart';
 import 'lista_sitios_view.dart';
 import 'rutas_view.dart';
-import 'camara_view.dart';
 import 'resenas_view.dart';
 import 'crear_resena_view.dart';
+import 'peticiones_view.dart';
+import 'usuarios_view.dart';
+import 'sugerencias_view.dart';
+import 'crear_sugerencia_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -20,30 +23,27 @@ class _HomeViewState extends State<HomeView> {
   // Índice 2 = Mapa (centro)
   int _indiceActual = 2;
 
-  // Orden: Reseñas | Agregar | MAPA (centro) | Fotos | Rutas
-  final List<_NavItem> _items = const [
-    _NavItem(icon: Icons.list_alt_rounded,  label: 'Reseñas',  isCenter: false),
-    _NavItem(icon: Icons.place_rounded,      label: 'Lugares',  isCenter: false),
-    _NavItem(icon: Icons.map_rounded,        label: 'Mapa',     isCenter: true),
-    _NavItem(icon: Icons.camera_alt_rounded, label: 'Fotos',    isCenter: false),
-    _NavItem(icon: Icons.navigation_rounded, label: 'Rutas',    isCenter: false),
-  ];
-
-  // Vistas reales sólo para los índices que tienen vista asignada
-  Widget _buildView(int index) {
+  // Vistas reales dependiendo del índice y rol
+  Widget _buildView(int index, bool isAdmin) {
     switch (index) {
       case 2:
-        return const MapaView();
+        return MapaView(
+          onExplorarTap: () {
+            setState(() {
+              _indiceActual = 1;
+            });
+          },
+        );
       case 3:
-        return const CamaraView();
+        return isAdmin ? const PeticionesView() : const SugerenciasView();
       case 4:
-        return const RutasView();
+        return isAdmin ? const UsuariosView() : const RutasView();
       case 1:
         return const ListaSitiosView();
       case 0:
         return const ResenasView();
       default:
-        return _PlaceholderView(label: _items[index].label);
+        return const SizedBox();
     }
   }
 
@@ -53,6 +53,46 @@ class _HomeViewState extends State<HomeView> {
     final primaryColor = theme.colorScheme.primary; // 0xFFE60012
     final authViewModel = Provider.of<AuthViewModel>(context);
     final user = authViewModel.usuario;
+    final usuarioModel = authViewModel.usuarioModel;
+    final isAdmin = usuarioModel?.rol == 'administrador';
+
+    final List<_NavItem> items = [
+      const _NavItem(
+        icon: Icons.list_alt_rounded,
+        label: 'Reseñas',
+        isCenter: false,
+      ),
+      const _NavItem(
+        icon: Icons.place_rounded,
+        label: 'Lugares',
+        isCenter: false,
+      ),
+      const _NavItem(icon: Icons.map_rounded, label: 'Mapa', isCenter: true),
+      if (isAdmin)
+        const _NavItem(
+          icon: Icons.assignment_rounded,
+          label: 'Peticiones',
+          isCenter: false,
+        )
+      else
+        const _NavItem(
+          icon: Icons.lightbulb_rounded,
+          label: 'Sugerencias',
+          isCenter: false,
+        ),
+      if (isAdmin)
+        const _NavItem(
+          icon: Icons.people_rounded,
+          label: 'Usuarios',
+          isCenter: false,
+        )
+      else
+        const _NavItem(
+          icon: Icons.navigation_rounded,
+          label: 'Rutas',
+          isCenter: false,
+        ),
+    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -72,7 +112,7 @@ class _HomeViewState extends State<HomeView> {
             ),
             const SizedBox(width: 12),
             Text(
-              'Turismo Local',
+              'GeoShifters',
               style: GoogleFonts.bebasNeue(
                 fontSize: 28,
                 color: Colors.white,
@@ -95,7 +135,11 @@ class _HomeViewState extends State<HomeView> {
                         ? NetworkImage(user.photoURL!)
                         : null,
                     child: user.photoURL == null
-                        ? const Icon(Icons.person, size: 20, color: Colors.white)
+                        ? const Icon(
+                            Icons.person,
+                            size: 20,
+                            color: Colors.white,
+                          )
                         : null,
                   ),
                   IconButton(
@@ -111,14 +155,17 @@ class _HomeViewState extends State<HomeView> {
         ],
       ),
       extendBody: true, // Para que el body vaya detrás de la notch
-      body: _buildView(_indiceActual),
-      floatingActionButton: _indiceActual == 0
+      body: _buildView(_indiceActual, isAdmin),
+      floatingActionButton:
+          (!isAdmin && (_indiceActual == 0 || _indiceActual == 3))
           ? FloatingActionButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const CrearResenaView(),
+                    builder: (context) => _indiceActual == 0
+                        ? const CrearResenaView()
+                        : const CrearSugerenciaView(),
                   ),
                 );
               },
@@ -127,7 +174,7 @@ class _HomeViewState extends State<HomeView> {
           : null,
       bottomNavigationBar: _CustomNavBar(
         selectedIndex: _indiceActual,
-        items: _items,
+        items: items,
         primaryColor: primaryColor,
         onTap: (i) => setState(() => _indiceActual = i),
       ),
@@ -389,15 +436,13 @@ class _FloatingNotchPainter extends CustomPainter {
       // Borde superior izquierdo
       ..lineTo(cx - gap - curveOffset, topY)
       // Notch (curva central)
-      ..quadraticBezierTo(
-          cx - gap, topY, cx - gap, topY - notchRadius / 4)
+      ..quadraticBezierTo(cx - gap, topY, cx - gap, topY - notchRadius / 4)
       ..arcToPoint(
         Offset(cx + gap, topY - notchRadius / 4),
         radius: Radius.circular(notchRadius),
         clockwise: false,
       )
-      ..quadraticBezierTo(
-          cx + gap, topY, cx + gap + curveOffset, topY)
+      ..quadraticBezierTo(cx + gap, topY, cx + gap + curveOffset, topY)
       // Borde superior derecho
       ..lineTo(right - cornerRadius, topY)
       // Esquina superior derecha
@@ -425,45 +470,4 @@ class _FloatingNotchPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// ─────────────────────────────────────────────
-//  Placeholder para pestañas sin vista aún
-// ─────────────────────────────────────────────
-class _PlaceholderView extends StatelessWidget {
-  final String label;
-  const _PlaceholderView({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.construction_rounded,
-            size: 56,
-            color: const Color(0xFFE60012).withValues(alpha: 0.4),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            label.toUpperCase(),
-            style: GoogleFonts.bebasNeue(
-              fontSize: 32,
-              color: Colors.white54,
-              letterSpacing: 4,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Próximamente',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.white24,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

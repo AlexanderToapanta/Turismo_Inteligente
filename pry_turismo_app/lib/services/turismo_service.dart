@@ -23,7 +23,7 @@ class TurismoService {
       return lugares;
     } catch (e) {
       print('Error obteniendo lugares en tiempo real: $e');
-      return [];
+      throw e;
     }
   }
 

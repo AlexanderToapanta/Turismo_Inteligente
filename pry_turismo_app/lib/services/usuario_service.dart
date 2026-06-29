@@ -55,4 +55,21 @@ class UsuarioService {
     if (!snapshot.exists || snapshot.data() == null) return null;
     return UsuarioModel.fromMap(snapshot.data()!);
   }
+
+  // ─────────────────────────────────────────────────────────
+  /// Obtiene todos los usuarios.
+  // ─────────────────────────────────────────────────────────
+  Future<List<UsuarioModel>> obtenerTodosLosUsuarios() async {
+    final snapshot = await _col.get();
+    return snapshot.docs
+        .map((doc) => UsuarioModel.fromMap(doc.data()))
+        .toList();
+  }
+
+  // ─────────────────────────────────────────────────────────
+  /// Actualiza el rol de un usuario.
+  // ─────────────────────────────────────────────────────────
+  Future<void> actualizarRolUsuario(String uid, String nuevoRol) async {
+    await _col.doc(uid).update({'rol': nuevoRol});
+  }
 }

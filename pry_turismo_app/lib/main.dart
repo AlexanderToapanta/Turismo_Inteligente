@@ -16,7 +16,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await initializeDateFormatting('es', null);
-  
+
   final prefs = await SharedPreferences.getInstance();
   final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
 
@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ResenaViewModel()),
       ],
       child: MaterialApp(
-        title: 'Turismo Local App',
+        title: 'GeoShifters',
         debugShowCheckedModeBanner: false,
         theme: TemaPersona5.temaClaro,
         home: hasSeenOnboarding ? const AuthChecker() : const WelcomeView(),

@@ -7,20 +7,25 @@ import '../models/detalle_lugar.dart';
 import '../services/turismo_service.dart';
 import '../services/ruta_service.dart';
 import '../services/google_places_service.dart';
-import '../services/resena_service.dart';
+import '../services/resena_service.dart';
+import '../services/sugerencia_service.dart';
 
 class TurismoViewModel extends ChangeNotifier {
   final TurismoService _service = TurismoService();
   final RutaService _rutaService = RutaService();
   final GooglePlacesService _placesService = GooglePlacesService();
-  final ResenaService _resenaService = ResenaService();
+  final ResenaService _resenaService = ResenaService();
+  final SugerenciaService _sugerenciaService = SugerenciaService();
 
   Position? _posicionActual;
   List<SitioTuristico> _sitiosCercanos = [];
+  List<SitioTuristico> _sugerenciasAprobadas = [];
   double? _rumbo;
   bool _cargando = false;
   bool _cargandoLugares = false;
   String? _error;
+  Position? _ultimaPosicionCarga;
+  final Map<String, double> _distanciasReales = {};
   
   // Lista de puntos para la ruta (Polyline)
   List<LatLng> _puntosRuta = [];
@@ -41,7 +46,14 @@ class TurismoViewModel extends ChangeNotifier {
   double? _azimutHaciaSitio;
 
   Position? get posicionActual => _posicionActual;
-  List<SitioTuristico> get sitiosCercanos => _sitiosCercanos;
+  // Lista combinada: OSM + sugerencias aprobadas de Firebase
+  List<SitioTuristico> get sitiosCercanos {
+    final nombres = _sitiosCercanos.map((s) => s.nombre.toLowerCase()).toSet();
+    final extras = _sugerenciasAprobadas
+        .where((s) => !nombres.contains(s.nombre.toLowerCase()))
+        .toList();
+    return [..._sitiosCercanos, ...extras];
+  }
   double? get rumbo => _rumbo;
   bool get cargando => _cargando;
   bool get cargandoLugares => _cargandoLugares;
@@ -59,12 +71,9 @@ class TurismoViewModel extends ChangeNotifier {
   GooglePlacesService get placesService => _placesService;
 
   List<SitioTuristico> get sitiosFiltrados {
-    if (_categoriaSeleccionada == 'Todos') {
-      return _sitiosCercanos;
-    }
-    return _sitiosCercanos
-        .where((sitio) => sitio.categoria == _categoriaSeleccionada)
-        .toList();
+    final todos = sitiosCercanos;
+    if (_categoriaSeleccionada == 'Todos') return todos;
+    return todos.where((s) => s.categoria == _categoriaSeleccionada).toList();
   }
 
   void cambiarCategoria(String nuevaCategoria) {
@@ -76,6 +85,11 @@ class TurismoViewModel extends ChangeNotifier {
 
   TurismoViewModel() {
     inicializar();
+    // Suscribirse a las sugerencias aprobadas de Firebase en tiempo real
+    _sugerenciaService.obtenerSugerenciasAprobadasComoSitios().listen((lista) {
+      _sugerenciasAprobadas = lista;
+      notifyListeners();
+    });
   }
 
   Future<void> inicializar() async {
@@ -96,7 +110,19 @@ class TurismoViewModel extends ChangeNotifier {
       // Escuchar cambios de posición
       Geolocator.getPositionStream().listen((Position position) {
         _posicionActual = position;
-        _cargarLugaresCercanos();
+        
+        // Solo recargar si no tenemos posición previa o nos hemos movido más de 500 metros
+        if (_ultimaPosicionCarga == null || 
+            Geolocator.distanceBetween(
+              _ultimaPosicionCarga!.latitude, 
+              _ultimaPosicionCarga!.longitude, 
+              position.latitude, 
+              position.longitude
+            ) > 500) {
+          _ultimaPosicionCarga = position;
+          _cargarLugaresCercanos();
+        }
+        
         _actualizarAzimutHaciaSitio();
         notifyListeners();
       });
@@ -117,19 +143,45 @@ class TurismoViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _sitiosCercanos = await _service.obtenerLugaresCercanosEnTiempoReal(
+      final nuevosSitios = await _service.obtenerLugaresCercanosEnTiempoReal(
         _posicionActual!.latitude,
         _posicionActual!.longitude,
       );
       
+      _sitiosCercanos = nuevosSitios;
+      
       if (_sitiosCercanos.isEmpty) {
         _error = "No hay lugares turísticos cercanos en este momento.";
+      } else {
+        _error = null;
+        _calcularDistanciasReales();
       }
     } catch (e) {
+      // Si hay error, no borramos los lugares que ya teníamos
       _error = "Error al cargar lugares: $e";
+      print(_error);
     } finally {
       _cargandoLugares = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _calcularDistanciasReales() async {
+    if (_posicionActual == null || _sitiosCercanos.isEmpty) return;
+
+    final inicio = LatLng(_posicionActual!.latitude, _posicionActual!.longitude);
+    final destinos = _sitiosCercanos.map((s) => LatLng(s.latitud, s.longitud)).toList();
+
+    try {
+      final distancias = await _rutaService.obtenerDistanciasMatrix(inicio, destinos);
+      if (distancias.length == destinos.length) {
+        for (int i = 0; i < destinos.length; i++) {
+          _distanciasReales[_sitiosCercanos[i].nombre] = distancias[i];
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      print("Error obteniendo distancias reales: $e");
     }
   }
 
@@ -187,11 +239,24 @@ class TurismoViewModel extends ChangeNotifier {
     _promedioResenas = null;
     notifyListeners();
 
-    // Cargar detalles de Google Places y promedio de reseñas en paralelo
     final idLugar = sitio.nombre.toLowerCase().replaceAll(' ', '_');
 
+    if (sitio.esSugerencia) {
+      // Para sugerencias comunitarias: solo cargar promedio de reseñas de la app
+      try {
+        _promedioResenas = await _resenaService.obtenerPromedioResenas(idLugar);
+      } catch (e) {
+        print('Error al cargar promedio de reseñas: $e');
+      } finally {
+        _cargandoDetalles = false;
+        _cargandoPromedio = false;
+      }
+      notifyListeners();
+      return;
+    }
+
+    // Para lugares de OpenStreetMap: cargar Google Places + promedio en paralelo
     await Future.wait([
-      // Detalles de Google Places
       () async {
         try {
           final placeId = await _placesService.buscarLugarId(
@@ -208,7 +273,6 @@ class TurismoViewModel extends ChangeNotifier {
           _cargandoDetalles = false;
         }
       }(),
-      // Promedio de reseñas propias
       () async {
         try {
           _promedioResenas =
@@ -226,6 +290,13 @@ class TurismoViewModel extends ChangeNotifier {
 
   double obtenerDistancia(SitioTuristico sitio) {
     if (_posicionActual == null) return 0;
+    
+    // Si tenemos la distancia real por ruta, la usamos
+    if (_distanciasReales.containsKey(sitio.nombre)) {
+      return _distanciasReales[sitio.nombre]!;
+    }
+    
+    // Fallback a distancia en línea recta (Haversine)
     return _service.calcularDistancia(
       _posicionActual!.latitude,
       _posicionActual!.longitude,
