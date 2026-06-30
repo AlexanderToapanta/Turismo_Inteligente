@@ -160,45 +160,83 @@ class _CrearResenaViewState extends State<CrearResenaView> {
     final sitios = context.watch<TurismoViewModel>().sitiosCercanos;
     final cargando = context.watch<TurismoViewModel>().cargando;
 
-    return DropdownButtonFormField<SitioTuristico>(
-      isExpanded: true,
-      decoration: const InputDecoration(labelText: 'Lugar turístico'),
-      dropdownColor: TemaPersona5.surfaceColor,
-      value: sitios.contains(vm.lugarSeleccionado) ? vm.lugarSeleccionado : null,
-      hint: Text(
-        cargando
-            ? 'Cargando lugares…'
-            : sitios.isEmpty
-                ? 'No hay lugares cercanos'
-                : 'Selecciona un lugar',
-        style: const TextStyle(color: Color(0xFF9E9E9E)),
-      ),
-      items: sitios.map((SitioTuristico sitio) {
-        return DropdownMenuItem<SitioTuristico>(
-          value: sitio,
-          child: Row(
-            children: [
-              if (sitio.esSugerencia)
-                const Padding(
-                  padding: EdgeInsets.only(right: 6),
-                  child: Icon(Icons.add_location_alt, color: Colors.green, size: 16),
-                ),
-              Expanded(
-                child: Text(
-                  sitio.nombre,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  overflow: TextOverflow.ellipsis,
+    if (cargando && sitios.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Autocomplete<SitioTuristico>(
+          displayStringForOption: (option) => option.nombre,
+          initialValue: vm.lugarSeleccionado != null 
+              ? TextEditingValue(text: vm.lugarSeleccionado!.nombre) 
+              : null,
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            if (textEditingValue.text == '') {
+              return sitios;
+            }
+            return sitios.where((SitioTuristico option) {
+              return option.nombre
+                  .toLowerCase()
+                  .contains(textEditingValue.text.toLowerCase());
+            });
+          },
+          onSelected: (SitioTuristico selection) {
+            vm.seleccionarLugar(selection);
+          },
+          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+            return TextFormField(
+              controller: textEditingController,
+              focusNode: focusNode,
+              decoration: const InputDecoration(
+                labelText: 'Lugar turístico',
+                hintText: 'Escribe para buscar o selecciona...',
+                suffixIcon: Icon(Icons.search),
+              ),
+              style: Theme.of(context).textTheme.bodyLarge,
+              onFieldSubmitted: (value) => onFieldSubmitted(),
+            );
+          },
+          optionsViewBuilder: (context, onSelected, options) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 4.0,
+                color: TemaPersona5.surfaceColor,
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                child: Container(
+                  width: constraints.maxWidth,
+                  constraints: const BoxConstraints(maxHeight: 250),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: TemaPersona5.primaryColor.withOpacity(0.5)),
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                  ),
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final SitioTuristico option = options.elementAt(index);
+                      return ListTile(
+                        leading: Icon(
+                          option.esSugerencia ? Icons.add_location_alt : Icons.location_on,
+                          color: option.esSugerencia ? Colors.green : TemaPersona5.primaryColor,
+                          size: 18,
+                        ),
+                        title: Text(
+                          option.nombre,
+                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+                        ),
+                        onTap: () => onSelected(option),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ],
-          ),
+            );
+          },
         );
-      }).toList(),
-      onChanged: sitios.isEmpty
-          ? null
-          : (SitioTuristico? sitio) {
-              if (sitio != null) vm.seleccionarLugar(sitio);
-            },
+      },
     );
   }
 }

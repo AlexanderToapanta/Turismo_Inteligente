@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../viewmodels/turismo_viewmodel.dart';
+import '../viewmodels/resena_viewmodel.dart';
 import '../models/sitio_turistico.dart';
 import '../theme/tema_turismo.dart';
 
+import 'crear_resena_view.dart';
 import 'widgets/promedio_resenas_widget.dart';
 import 'widgets/promedio_resenas_sugerencia_widget.dart';
 import 'widgets/imagen_placeholder_widget.dart';
@@ -270,25 +272,56 @@ class _DetalleLugarViewState extends State<DetalleLugarView> {
   }
 
   Widget _buildBotonNavegar(TurismoViewModel viewModel) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          viewModel.trazarRuta(widget.sitio);
-          Navigator.pop(context);
-        },
-        icon: const Icon(Icons.directions, color: TemaPersona5.secondaryColor),
-        label: const Text(
-          'Navegar hacia acá',
-          style: TextStyle(fontWeight: FontWeight.bold),
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              viewModel.trazarRuta(widget.sitio);
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.directions, color: TemaPersona5.secondaryColor),
+            label: const Text(
+              'Navegar hacia acá',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: TemaPersona5.primaryColor,
+              foregroundColor: TemaPersona5.secondaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            ),
+          ),
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: TemaPersona5.primaryColor,
-          foregroundColor: TemaPersona5.secondaryColor,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              // Pre-seleccionar el lugar en el ViewModel de reseñas
+              final resenaVM = Provider.of<ResenaViewModel>(context, listen: false);
+              resenaVM.seleccionarLugar(widget.sitio);
+              
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CrearResenaView()),
+              );
+            },
+            icon: const Icon(Icons.rate_review, color: TemaPersona5.primaryColor),
+            label: const Text(
+              'Escribir una reseña',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: TemaPersona5.primaryColor, width: 2),
+              foregroundColor: TemaPersona5.primaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 

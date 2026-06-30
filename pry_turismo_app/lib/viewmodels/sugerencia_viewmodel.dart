@@ -60,11 +60,23 @@ class SugerenciaViewModel extends ChangeNotifier {
         throw 'Los permisos de ubicación están denegados permanentemente.';
       }
 
-      Position position = await Geolocator.getCurrentPosition();
+      // Intentamos obtener la posición con alta precisión
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      );
+      
       _latitud = position.latitude;
       _longitud = position.longitude;
     } catch (e) {
-      // Ignoramos el error por ahora o se puede mostrar en la UI
+      // Intentar obtener la última ubicación conocida como respaldo
+      try {
+        Position? lastPosition = await Geolocator.getLastKnownPosition();
+        if (lastPosition != null) {
+          _latitud = lastPosition.latitude;
+          _longitud = lastPosition.longitude;
+        }
+      } catch (_) {}
     } finally {
       _cargandoUbicacion = false;
       notifyListeners();

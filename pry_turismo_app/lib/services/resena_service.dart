@@ -62,6 +62,21 @@ class ResenaService {
   }
 
   // ─────────────────────────────────────────────────────────
+  /// Elimina todas las reseñas asociadas a un lugar específico.
+  // ─────────────────────────────────────────────────────────
+  Future<void> eliminarResenasPorLugar(String idLugar) async {
+    final snapshot = await _col.where('idLugar', isEqualTo: idLugar).get();
+    
+    if (snapshot.docs.isEmpty) return;
+
+    final batch = _firestore.batch();
+    for (var doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
+
+  // ─────────────────────────────────────────────────────────
   /// Obtiene todas las reseñas ordenadas por fecha descendente.
   // ─────────────────────────────────────────────────────────
   Future<List<ResenaModel>> obtenerResenas() async {

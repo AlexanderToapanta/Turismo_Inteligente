@@ -211,7 +211,7 @@ out center tags;
       return distA.compareTo(distB);
     });
 
-    return lista.take(50).toList();
+    return lista.take(100).toList();
   }
 
   String _obtenerIconoSegunCategoria(String categoria) {

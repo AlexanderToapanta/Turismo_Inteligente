@@ -35,7 +35,6 @@ class RutaService {
   Future<List<double>> obtenerDistanciasMatrix(LatLng origen, List<LatLng> destinos) async {
     if (destinos.isEmpty) return [];
 
-    // OSRM Table API URL: {origen};{destino1};{destino2}...
     final coordStrings = destinos.map((d) => '${d.longitude},${d.latitude}').toList();
     coordStrings.insert(0, '${origen.longitude},${origen.latitude}');
     final coordinates = coordStrings.join(';');
@@ -51,7 +50,6 @@ class RutaService {
         final data = json.decode(response.body);
         if (data['distances'] != null && (data['distances'] as List).isNotEmpty) {
           final distancesList = data['distances'][0] as List;
-          // El primer elemento es el origen al origen (0), lo ignoramos
           return distancesList.skip(1).map((d) => (d as num).toDouble()).toList();
         }
       }

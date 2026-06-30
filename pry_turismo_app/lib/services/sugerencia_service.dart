@@ -81,10 +81,38 @@ class SugerenciaService {
   }
 
   // ─────────────────────────────────────────────────────────
-  /// Elimina una sugerencia de Firestore.
+  /// Elimina una sugerencia de Firestore y sus reseñas asociadas.
   // ─────────────────────────────────────────────────────────
   Future<void> eliminarSugerencia(String id) async {
-    await _col.doc(id).delete();
+    try {
+      // 1. Obtener la sugerencia para conocer su nombre y borrar reseñas
+      final doc = await _col.doc(id).get();
+      if (doc.exists && doc.data() != null) {
+        final nombreLugar = doc.data()!['nombreLugar'] as String?;
+        if (nombreLugar != null) {
+          final idLugar = nombreLugar.toLowerCase().replaceAll(' ', '_');
+          // 2. Borrar todas las reseñas asociadas a este lugar
+          final snapshotResenas = await _firestore
+              .collection('resenas')
+              .where('idLugar', isEqualTo: idLugar)
+              .get();
+          
+          if (snapshotResenas.docs.isNotEmpty) {
+            final batch = _firestore.batch();
+            for (var resenaDoc in snapshotResenas.docs) {
+              batch.delete(resenaDoc.reference);
+            }
+            await batch.commit();
+          }
+        }
+      }
+      
+      // 3. Eliminar el documento de la sugerencia
+      await _col.doc(id).delete();
+    } catch (e) {
+      print('Error al eliminar sugerencia y reseñas: $e');
+      rethrow;
+    }
   }
 
   // ─────────────────────────────────────────────────────────

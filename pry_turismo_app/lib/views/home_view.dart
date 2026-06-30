@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/resena_viewmodel.dart';
 import 'mapa_view.dart';
 import 'lista_sitios_view.dart';
 import 'rutas_view.dart';
@@ -160,6 +161,9 @@ class _HomeViewState extends State<HomeView> {
           (!isAdmin && (_indiceActual == 0 || _indiceActual == 3))
           ? FloatingActionButton(
               onPressed: () {
+                if (_indiceActual == 0) {
+                  Provider.of<ResenaViewModel>(context, listen: false).resetFormulario();
+                }
                 Navigator.push(
                   context,
                   MaterialPageRoute(

@@ -269,6 +269,19 @@ class MapaView extends StatelessWidget {
                 ),
               ),
 
+            // Botón para refrescar lugares
+            Positioned(
+              bottom: viewModel.sitioSeleccionado != null ? 150 : 90,
+              right: 20,
+              child: FloatingActionButton(
+                onPressed: () => viewModel.refrescarLugares(),
+                backgroundColor: const Color(0xFF0D7377),
+                foregroundColor: Colors.white,
+                mini: true,
+                child: const Icon(Icons.refresh),
+              ),
+            ),
+
             // Indicador de sitio seleccionado
             if (viewModel.sitioSeleccionado != null)
               Positioned(
