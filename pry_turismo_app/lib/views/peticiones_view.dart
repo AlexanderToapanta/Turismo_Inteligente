@@ -1,73 +1,119 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/sugerencia_model.dart';
-import '../services/sugerencia_service.dart';
 import '../theme/tema_turismo.dart';
+import '../viewmodels/sugerencia_viewmodel.dart';
 
-class PeticionesView extends StatelessWidget {
+class PeticionesView extends StatefulWidget {
   const PeticionesView({super.key});
 
   @override
+  State<PeticionesView> createState() => _PeticionesViewState();
+}
+
+class _PeticionesViewState extends State<PeticionesView> {
+  @override
+  void initState() {
+    super.initState();
+    // Cargar peticiones al iniciar la vista
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SugerenciaViewModel>().cargarTodasLasPeticiones();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final sugerenciaService = SugerenciaService();
-
-    return StreamBuilder<List<SugerenciaModel>>(
-      stream: sugerenciaService.obtenerTodasLasSugerencias(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+    return Consumer<SugerenciaViewModel>(
+      builder: (context, vm, child) {
+        if (vm.cargandoPeticiones && vm.peticiones.isEmpty) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(TemaPersona5.primaryColor),
+            ),
+          );
         }
 
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+        if (vm.errorPeticiones != null && vm.peticiones.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 56, color: TemaPersona5.primaryColor),
+                  const SizedBox(height: 16),
+                  Text(vm.errorPeticiones!, textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(fontSize: 14, color: TemaPersona5.textSecondary)),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => vm.cargarTodasLasPeticiones(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
-        final peticiones = snapshot.data ?? [];
-
-        if (peticiones.isEmpty) {
-          return _buildEmptyState();
+        if (vm.peticiones.isEmpty) {
+          return _buildEmptyState(vm);
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-          itemCount: peticiones.length,
-          itemBuilder: (context, i) => _PeticionCard(
-            peticion: peticiones[i],
-            service: sugerenciaService,
+        return RefreshIndicator(
+          onRefresh: () => vm.cargarTodasLasPeticiones(),
+          color: TemaPersona5.primaryColor,
+          backgroundColor: TemaPersona5.surfaceColor,
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+            itemCount: vm.peticiones.length,
+            itemBuilder: (context, i) => _PeticionCard(
+              peticion: vm.peticiones[i],
+              vm: vm,
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.inbox_outlined,
-                size: 80, color: TemaPersona5.primaryColor),
-            const SizedBox(height: 24),
-            Text(
-              'No hay peticiones',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.bebasNeue(
-                  fontSize: 32,
-                  color: TemaPersona5.textPrimary,
-                  letterSpacing: 1.5),
+  Widget _buildEmptyState(SugerenciaViewModel vm) {
+    return RefreshIndicator(
+      onRefresh: () => vm.cargarTodasLasPeticiones(),
+      child: Stack(
+        children: [
+          ListView(),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.inbox_outlined,
+                      size: 80, color: TemaPersona5.primaryColor),
+                  const SizedBox(height: 24),
+                  Text(
+                    'No hay peticiones',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.bebasNeue(
+                        fontSize: 32,
+                        color: TemaPersona5.textPrimary,
+                        letterSpacing: 1.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No hay lugares sugeridos pendientes por revisar.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                        fontSize: 16, color: TemaPersona5.textSecondary),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'No hay lugares sugeridos pendientes por revisar.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                  fontSize: 16, color: TemaPersona5.textSecondary),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -75,9 +121,9 @@ class PeticionesView extends StatelessWidget {
 
 class _PeticionCard extends StatelessWidget {
   final SugerenciaModel peticion;
-  final SugerenciaService service;
+  final SugerenciaViewModel vm;
 
-  const _PeticionCard({required this.peticion, required this.service});
+  const _PeticionCard({required this.peticion, required this.vm});
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +167,7 @@ class _PeticionCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: estadoColor.withValues(alpha: 0.2),
+                        color: estadoColor.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: estadoColor),
                       ),
@@ -177,7 +223,7 @@ class _PeticionCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => _cambiarEstado('rechazado'),
+                          onPressed: () => _cambiarEstado(context, 'rechazado'),
                           style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.red),
                           child: const Text('Rechazar'),
@@ -186,7 +232,7 @@ class _PeticionCard extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => _cambiarEstado('aprobado'),
+                          onPressed: () => _cambiarEstado(context, 'aprobado'),
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green),
                           child: const Text('Aprobar'),
@@ -203,8 +249,16 @@ class _PeticionCard extends StatelessWidget {
     );
   }
 
-  Future<void> _cambiarEstado(String nuevoEstado) async {
-    await service.actualizarEstado(peticion.id, nuevoEstado);
+  Future<void> _cambiarEstado(BuildContext context, String nuevoEstado) async {
+    await vm.actualizarEstadoPeticion(peticion.id, nuevoEstado);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Petición ${nuevoEstado == 'aprobado' ? 'aprobada' : 'rechazada'}'),
+          backgroundColor: nuevoEstado == 'aprobado' ? Colors.green : Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _imagePlaceholder() {

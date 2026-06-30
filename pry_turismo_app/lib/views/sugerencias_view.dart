@@ -3,83 +3,121 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/sugerencia_model.dart';
-import '../services/sugerencia_service.dart';
 import '../theme/tema_turismo.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/sugerencia_viewmodel.dart';
 
-class SugerenciasView extends StatelessWidget {
+class SugerenciasView extends StatefulWidget {
   const SugerenciasView({super.key});
 
   @override
+  State<SugerenciasView> createState() => _SugerenciasViewState();
+}
+
+class _SugerenciasViewState extends State<SugerenciasView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authVM = context.read<AuthViewModel>();
+      if (authVM.usuario != null) {
+        context.read<SugerenciaViewModel>().cargarMisSugerencias(authVM.usuario!.uid);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = context.watch<AuthViewModel>();
     final usuarioId = authViewModel.usuario?.uid;
 
     if (usuarioId == null) {
       return const Center(child: Text('Inicia sesión para ver tus sugerencias'));
     }
 
-    final sugerenciaService = SugerenciaService();
-
-    return StreamBuilder<List<SugerenciaModel>>(
-      stream: sugerenciaService.obtenerSugerenciasUsuario(usuarioId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+    return Consumer<SugerenciaViewModel>(
+      builder: (context, vm, _) {
+        if (vm.cargandoMisSugerencias && vm.misSugerencias.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+        if (vm.errorMisSugerencias != null && vm.misSugerencias.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 56, color: TemaPersona5.primaryColor),
+                  const SizedBox(height: 16),
+                  Text(vm.errorMisSugerencias!, textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(fontSize: 14, color: TemaPersona5.textSecondary)),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => vm.cargarMisSugerencias(usuarioId),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
-        final sugerencias = snapshot.data ?? [];
-
-        if (sugerencias.isEmpty) {
-          return _buildEmptyState();
+        if (vm.misSugerencias.isEmpty) {
+          return _buildEmptyState(vm, usuarioId);
         }
 
-        return _buildSugerenciasList(context, sugerencias);
+        return RefreshIndicator(
+          onRefresh: () => vm.cargarMisSugerencias(usuarioId),
+          color: TemaPersona5.primaryColor,
+          backgroundColor: TemaPersona5.surfaceColor,
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+            itemCount: vm.misSugerencias.length,
+            itemBuilder: (context, i) => _SugerenciaCard(sugerencia: vm.misSugerencias[i]),
+          ),
+        );
       },
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.add_location_alt_outlined,
-                size: 80, color: TemaPersona5.primaryColor),
-            const SizedBox(height: 24),
-            Text(
-              'Sugiérenos un lugar',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.bebasNeue(
-                  fontSize: 32,
-                  color: TemaPersona5.textPrimary,
-                  letterSpacing: 1.5),
+  Widget _buildEmptyState(SugerenciaViewModel vm, String usuarioId) {
+    return RefreshIndicator(
+      onRefresh: () => vm.cargarMisSugerencias(usuarioId),
+      child: Stack(
+        children: [
+          ListView(),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add_location_alt_outlined,
+                      size: 80, color: TemaPersona5.primaryColor),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Sugiérenos un lugar',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.bebasNeue(
+                        fontSize: 32,
+                        color: TemaPersona5.textPrimary,
+                        letterSpacing: 1.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Aún no has sugerido ningún lugar turístico. ¡Anímate y ayúdanos a crecer!',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                        fontSize: 16, color: TemaPersona5.textSecondary),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Aún no has sugerido ningún lugar turístico. ¡Anímate y ayúdanos a crecer!',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                  fontSize: 16, color: TemaPersona5.textSecondary),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildSugerenciasList(
-      BuildContext context, List<SugerenciaModel> sugerencias) {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-      itemCount: sugerencias.length,
-      itemBuilder: (context, i) => _SugerenciaCard(sugerencia: sugerencias[i]),
     );
   }
 }
@@ -131,7 +169,7 @@ class _SugerenciaCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: estadoColor.withValues(alpha: 0.2),
+                        color: estadoColor.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: estadoColor),
                       ),

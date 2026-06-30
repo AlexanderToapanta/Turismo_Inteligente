@@ -25,6 +25,26 @@ class SugerenciaViewModel extends ChangeNotifier {
   bool _enviando = false;
   bool get enviando => _enviando;
 
+  // ── Estado de la lista (Administrador) ──────────────────
+  List<SugerenciaModel> _peticiones = [];
+  List<SugerenciaModel> get peticiones => List.unmodifiable(_peticiones);
+
+  bool _cargandoPeticiones = false;
+  bool get cargandoPeticiones => _cargandoPeticiones;
+
+  String? _errorPeticiones;
+  String? get errorPeticiones => _errorPeticiones;
+
+  // ── Estado de la lista (Usuario) ───────────────────────
+  List<SugerenciaModel> _misSugerencias = [];
+  List<SugerenciaModel> get misSugerencias => List.unmodifiable(_misSugerencias);
+
+  bool _cargandoMisSugerencias = false;
+  bool get cargandoMisSugerencias => _cargandoMisSugerencias;
+
+  String? _errorMisSugerencias;
+  String? get errorMisSugerencias => _errorMisSugerencias;
+
   // ─────────────────────────────────────────────────────────
   // Setters
   // ─────────────────────────────────────────────────────────
@@ -136,6 +156,55 @@ class SugerenciaViewModel extends ChangeNotifier {
       return 'Error al enviar la sugerencia: $e';
     } finally {
       _enviando = false;
+      notifyListeners();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // Gestión de Peticiones (Administrador)
+  // ─────────────────────────────────────────────────────────
+  Future<void> cargarTodasLasPeticiones() async {
+    _cargandoPeticiones = true;
+    _errorPeticiones = null;
+    notifyListeners();
+
+    try {
+      // Usamos el stream pero lo convertimos a un valor único para el "refresco" manual
+      // o simplemente escuchamos el primer valor emitido.
+      // Para consistencia con ResenasView, obtendremos los datos una vez.
+      final snapshot = await _sugerenciaService.obtenerTodasLasSugerencias().first;
+      _peticiones = snapshot;
+    } catch (e) {
+      _errorPeticiones = 'Error al cargar las peticiones: $e';
+    } finally {
+      _cargandoPeticiones = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> actualizarEstadoPeticion(String id, String nuevoEstado) async {
+    try {
+      await _sugerenciaService.actualizarEstado(id, nuevoEstado);
+      // Recargamos la lista localmente
+      await cargarTodasLasPeticiones();
+    } catch (e) {
+      _errorPeticiones = 'Error al actualizar el estado: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> cargarMisSugerencias(String usuarioId) async {
+    _cargandoMisSugerencias = true;
+    _errorMisSugerencias = null;
+    notifyListeners();
+
+    try {
+      final snapshot = await _sugerenciaService.obtenerSugerenciasUsuario(usuarioId).first;
+      _misSugerencias = snapshot;
+    } catch (e) {
+      _errorMisSugerencias = 'Error al cargar tus sugerencias: $e';
+    } finally {
+      _cargandoMisSugerencias = false;
       notifyListeners();
     }
   }

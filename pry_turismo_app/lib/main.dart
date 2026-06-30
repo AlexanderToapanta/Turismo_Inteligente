@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'viewmodels/turismo_viewmodel.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/resena_viewmodel.dart';
+import 'viewmodels/sugerencia_viewmodel.dart';
 import 'views/home_view.dart';
 import 'views/login_view.dart';
 import 'views/welcome_view.dart';
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TurismoViewModel()),
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => ResenaViewModel()),
+        ChangeNotifierProvider(create: (_) => SugerenciaViewModel()),
       ],
       child: MaterialApp(
         title: 'GeoShifters',

@@ -44,18 +44,15 @@ class _CrearSugerenciaViewState extends State<CrearSugerenciaView> {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos ChangeNotifierProvider aquí o en main.dart. Aquí está bien para que el estado viva solo en esta vista.
-    return ChangeNotifierProvider(
-      create: (_) => SugerenciaViewModel(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Sugerir Lugar',
-            style: GoogleFonts.bebasNeue(fontSize: 24, letterSpacing: 1.5),
-          ),
-          backgroundColor: TemaPersona5.surfaceColor,
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Sugerir Lugar',
+          style: GoogleFonts.bebasNeue(fontSize: 24, letterSpacing: 1.5),
         ),
-        body: Consumer<SugerenciaViewModel>(
+        backgroundColor: TemaPersona5.surfaceColor,
+      ),
+      body: Consumer<SugerenciaViewModel>(
           builder: (context, vm, _) {
             if (vm.enviando) {
               return const Center(
@@ -257,7 +254,6 @@ class _CrearSugerenciaViewState extends State<CrearSugerenciaView> {
             );
           },
         ),
-      ),
-    );
+    ); 
   }
 }
