@@ -44,10 +44,22 @@ class TurismoViewModel extends ChangeNotifier {
   Position? get posicionActual => _posicionActual;
 
   List<SitioTuristico> get sitiosCercanos {
+    if (_posicionActual == null) return [];
+
     final nombres = _sitiosCercanos.map((s) => s.nombre.toLowerCase()).toSet();
-    final extras = _sugerenciasAprobadas
-        .where((s) => !nombres.contains(s.nombre.toLowerCase()))
-        .toList();
+    
+    // Filtrar sugerencias por distancia (5 km) y evitar duplicados
+    final extras = _sugerenciasAprobadas.where((s) {
+      final dist = _service.calcularDistancia(
+        _posicionActual!.latitude,
+        _posicionActual!.longitude,
+        s.latitud,
+        s.longitud,
+      );
+      
+      return dist <= TurismoService.DISTANCIA_MAXIMA && !nombres.contains(s.nombre.toLowerCase());
+    }).toList();
+
     return [..._sitiosCercanos, ...extras];
   }
 
