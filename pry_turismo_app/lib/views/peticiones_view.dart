@@ -209,7 +209,7 @@ class _PeticionCard extends StatelessWidget {
                           Text(peticion.nombreUsuario,
                               style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold)),
                           Text(peticion.correoUsuario,
-                              style: Theme.of(context).textTheme.labelSmall),
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.red)),
                         ],
                       ),
                     ),

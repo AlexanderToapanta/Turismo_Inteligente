@@ -42,6 +42,7 @@ class UsuarioService {
       'nombre': nombreFinal,
       'correo': correo,
       'rol': rol,
+      'estado': 'activo',
       'fechaRegistro': FieldValue.serverTimestamp(),
     });
   }
@@ -71,6 +72,13 @@ class UsuarioService {
   // ─────────────────────────────────────────────────────────
   Future<void> actualizarRolUsuario(String uid, String nuevoRol) async {
     await _col.doc(uid).update({'rol': nuevoRol});
+  }
+
+  // ─────────────────────────────────────────────────────────
+  /// Actualiza el estado de un usuario.
+  // ─────────────────────────────────────────────────────────
+  Future<void> actualizarEstadoUsuario(String uid, String nuevoEstado) async {
+    await _col.doc(uid).update({'estado': nuevoEstado});
   }
 
   // ─────────────────────────────────────────────────────────

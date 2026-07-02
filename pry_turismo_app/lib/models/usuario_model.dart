@@ -5,6 +5,7 @@ class UsuarioModel {
   final String nombre;
   final String correo;
   final String rol;
+  final String estado; // 'activo' o 'desactivado'
   final DateTime fechaRegistro;
 
   const UsuarioModel({
@@ -12,6 +13,7 @@ class UsuarioModel {
     required this.nombre,
     required this.correo,
     required this.rol,
+    this.estado = 'activo',
     required this.fechaRegistro,
   });
 
@@ -22,6 +24,7 @@ class UsuarioModel {
       'nombre': nombre,
       'correo': correo,
       'rol': rol,
+      'estado': estado,
       'fechaRegistro': Timestamp.fromDate(fechaRegistro),
     };
   }
@@ -32,6 +35,7 @@ class UsuarioModel {
       nombre: map['nombre'] as String,
       correo: map['correo'] as String,
       rol: map['rol'] as String,
+      estado: map['estado'] as String? ?? 'activo',
       fechaRegistro: (map['fechaRegistro'] as Timestamp).toDate(),
     );
   }

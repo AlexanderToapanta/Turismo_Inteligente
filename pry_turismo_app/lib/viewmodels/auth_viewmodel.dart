@@ -98,7 +98,15 @@ class AuthViewModel extends ChangeNotifier {
       usuario = await _authService.signInWithGoogle();
 
       if (usuario != null) {
-        await _cargarUsuarioModel(usuario!.uid);
+        final model = await _usuarioService.obtenerUsuario(usuario!.uid);
+        if (model?.estado == 'desactivado') {
+          await _authService.signOut();
+          usuario = null;
+          usuarioModel = null;
+          mensaje = 'Esta cuenta ha sido desactivada por el administrador.';
+          return;
+        }
+        usuarioModel = model;
         mensaje = 'Sesión iniciada correctamente con Google';
       } else {
         mensaje = 'Inicio de sesión cancelado';
@@ -129,7 +137,15 @@ class AuthViewModel extends ChangeNotifier {
       usuario = await _authService.signInWithEmailAndPassword(email, password);
 
       if (usuario != null) {
-        await _cargarUsuarioModel(usuario!.uid);
+        final model = await _usuarioService.obtenerUsuario(usuario!.uid);
+        if (model?.estado == 'desactivado') {
+          await _authService.signOut();
+          usuario = null;
+          usuarioModel = null;
+          mensaje = 'Esta cuenta ha sido desactivada por el administrador.';
+          return;
+        }
+        usuarioModel = model;
         mensaje = 'Sesión iniciada correctamente';
       }
     } catch (e) {

@@ -75,6 +75,7 @@ class _UsuarioCard extends StatefulWidget {
 class _UsuarioCardState extends State<_UsuarioCard> {
   final UsuarioService _usuarioService = UsuarioService();
   bool _cambiandoRol = false;
+  bool _cambiandoEstado = false;
 
   Future<void> _cambiarRol(String nuevoRol) async {
     setState(() => _cambiandoRol = true);
@@ -94,9 +95,28 @@ class _UsuarioCardState extends State<_UsuarioCard> {
     }
   }
 
+  Future<void> _cambiarEstado(String nuevoEstado) async {
+    setState(() => _cambiandoEstado = true);
+    try {
+      await _usuarioService.actualizarEstadoUsuario(widget.usuario.id, nuevoEstado);
+      widget.onRoleChanged();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cambiar estado: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _cambiandoEstado = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final esAdmin = widget.usuario.rol == 'administrador';
+    final esActivo = widget.usuario.estado == 'activo';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
@@ -107,10 +127,28 @@ class _UsuarioCardState extends State<_UsuarioCard> {
           child: Icon(esAdmin ? Icons.admin_panel_settings : Icons.person,
               color: Colors.white),
         ),
-        title: Text(widget.usuario.nombre,
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(widget.usuario.nombre,
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: esActivo ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: esActivo ? Colors.green : Colors.red, width: 0.5),
+              ),
+              child: Text(
+                esActivo ? 'ACTIVO' : 'BLOQUEADO',
+                style: GoogleFonts.poppins(fontSize: 8, color: esActivo ? Colors.green : Colors.red, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
         subtitle: Text(widget.usuario.correo),
-        trailing: _cambiandoRol
+        trailing: (_cambiandoRol || _cambiandoEstado)
             ? const SizedBox(
                 width: 24,
                 height: 24,
@@ -118,9 +156,15 @@ class _UsuarioCardState extends State<_UsuarioCard> {
               )
             : PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
-                onSelected: (nuevoRol) {
-                  if (nuevoRol != widget.usuario.rol) {
-                    _cambiarRol(nuevoRol);
+                onSelected: (val) {
+                  if (val == 'usuario' || val == 'administrador') {
+                    if (val != widget.usuario.rol) {
+                      _cambiarRol(val);
+                    }
+                  } else if (val == 'activar') {
+                    _cambiarEstado('activo');
+                  } else if (val == 'desactivar') {
+                    _cambiarEstado('desactivado');
                   }
                 },
                 itemBuilder: (context) => [
@@ -132,6 +176,17 @@ class _UsuarioCardState extends State<_UsuarioCard> {
                     value: 'administrador',
                     child: Text('Hacer Administrador'),
                   ),
+                  const PopupMenuDivider(),
+                  if (!esActivo)
+                    const PopupMenuItem(
+                      value: 'activar',
+                      child: Text('Activar Cuenta', style: TextStyle(color: Colors.green)),
+                    ),
+                  if (esActivo)
+                    const PopupMenuItem(
+                      value: 'desactivar',
+                      child: Text('Desactivar Cuenta', style: TextStyle(color: Colors.red)),
+                    ),
                 ],
               ),
       ),
