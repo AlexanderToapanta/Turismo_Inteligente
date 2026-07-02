@@ -1,4 +1,4 @@
-package com.example.pry_turismo_app
+package com.moviles.GeoShifters
 
 import io.flutter.embedding.android.FlutterActivity
 

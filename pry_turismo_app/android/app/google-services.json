@@ -7,12 +7,20 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:782499755343:android:077863ebae1586db8b013a",
+        "mobilesdk_app_id": "1:782499755343:android:f4953529d58324808b013a",
         "android_client_info": {
           "package_name": "com.moviles.GeoShifters"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "782499755343-jtnrpsvbtpht3m7a5qn82looru02cr9v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.moviles.GeoShifters",
+            "certificate_hash": "2fc1fe608d8d88302cbcb677c6ed01676ea324f9"
+          }
+        },
         {
           "client_id": "782499755343-nu0kq0nptb9297g7dl9fbkdurdf4r8db.apps.googleusercontent.com",
           "client_type": 3

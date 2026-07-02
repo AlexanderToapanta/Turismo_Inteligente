@@ -17,24 +17,19 @@ class WelcomeView extends StatelessWidget {
                 const Icon(
                   Icons.travel_explore,
                   size: 120,
-                  color: Colors.redAccent, // Ajuste para que cuadre con el tema de Persona 5 que parece tener la app (TemaPersona5)
+                  color: Colors
+                      .redAccent, // Ajuste para que cuadre con el tema de Persona 5 que parece tener la app (TemaPersona5)
                 ),
                 const SizedBox(height: 40),
                 const Text(
-                  'Turismo Inteligente',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  'GeoShifters',
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
                 const Text(
                   'Descubre lugares increíbles, comparte tus experiencias, lee reseñas y planea tu próxima aventura con nosotros.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.black87),
                   textAlign: TextAlign.center,
                 ),
                 const Spacer(),
@@ -42,7 +37,9 @@ class WelcomeView extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => const PermissionsView()),
+                      MaterialPageRoute(
+                        builder: (_) => const PermissionsView(),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(

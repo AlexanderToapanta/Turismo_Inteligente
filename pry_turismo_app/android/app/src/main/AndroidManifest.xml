@@ -8,8 +8,7 @@
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.SEND_SMS" />
+   
 
     <application
         android:label="GeoShifters"
@@ -17,7 +16,7 @@
         android:icon="@mipmap/ic_launcher">
 
         <activity
-            android:name="com.example.pry_turismo_app.MainActivity"
+            android:name="com.moviles.GeoShifters.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
