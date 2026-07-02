@@ -158,6 +158,37 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   // ─────────────────────────────────────────────────────────
+  /// Actualiza los datos del usuario actual (nombre y opcionalmente contraseña).
+  // ─────────────────────────────────────────────────────────
+  Future<String?> actualizarPerfil({
+    required String nuevoNombre,
+    String? nuevaPassword,
+  }) async {
+    cargando = true;
+    notifyListeners();
+
+    try {
+      if (nuevoNombre.trim().isNotEmpty && nuevoNombre != usuarioModel?.nombre) {
+        await _authService.actualizarNombre(nuevoNombre.trim());
+      }
+      if (nuevaPassword != null && nuevaPassword.isNotEmpty) {
+        await _authService.actualizarPassword(nuevaPassword);
+      }
+      
+      if (usuario != null) {
+        await _cargarUsuarioModel(usuario!.uid);
+      }
+      
+      return null; // Éxito
+    } catch (e) {
+      return _mensajeFirebase(e);
+    } finally {
+      cargando = false;
+      notifyListeners();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
   /// Traduce los errores de FirebaseAuth a mensajes legibles en español.
   // ─────────────────────────────────────────────────────────
   String _mensajeFirebase(Object e) {

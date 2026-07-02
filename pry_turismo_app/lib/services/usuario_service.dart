@@ -72,4 +72,11 @@ class UsuarioService {
   Future<void> actualizarRolUsuario(String uid, String nuevoRol) async {
     await _col.doc(uid).update({'rol': nuevoRol});
   }
+
+  // ─────────────────────────────────────────────────────────
+  /// Actualiza el nombre de un usuario.
+  // ─────────────────────────────────────────────────────────
+  Future<void> actualizarNombreUsuario(String uid, String nuevoNombre) async {
+    await _col.doc(uid).update({'nombre': nuevoNombre});
+  }
 }

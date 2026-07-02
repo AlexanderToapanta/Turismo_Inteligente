@@ -113,4 +113,25 @@ class AuthService {
       rethrow;
     }
   }
+
+  // ─────────────────────────────────────────────────────────
+  /// Actualiza el nombre mostrado del usuario actual.
+  // ─────────────────────────────────────────────────────────
+  Future<void> actualizarNombre(String nuevoNombre) async {
+    final user = _firebaseAuth.currentUser;
+    if (user != null) {
+      await user.updateDisplayName(nuevoNombre);
+      await _usuarioService.actualizarNombreUsuario(user.uid, nuevoNombre);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  /// Actualiza la contraseña del usuario actual.
+  // ─────────────────────────────────────────────────────────
+  Future<void> actualizarPassword(String nuevaPassword) async {
+    final user = _firebaseAuth.currentUser;
+    if (user != null) {
+      await user.updatePassword(nuevaPassword);
+    }
+  }
 }

@@ -12,6 +12,7 @@ import 'peticiones_view.dart';
 import 'usuarios_view.dart';
 import 'sugerencias_view.dart';
 import 'crear_sugerencia_view.dart';
+import 'editar_perfil_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -126,31 +127,56 @@ class _HomeViewState extends State<HomeView> {
         actions: [
           if (user != null)
             Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: Colors.white24,
-                    backgroundImage: user.photoURL != null
-                        ? NetworkImage(user.photoURL!)
-                        : null,
-                    child: user.photoURL == null
-                        ? const Icon(
-                            Icons.person,
-                            size: 20,
-                            color: Colors.white,
-                          )
-                        : null,
+              padding: const EdgeInsets.only(right: 16.0),
+              child: PopupMenuButton<String>(
+                offset: const Offset(0, 48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                onSelected: (val) {
+                  if (val == 'editar') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const EditarPerfilView()),
+                    );
+                  } else if (val == 'logout') {
+                    authViewModel.signOut();
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'editar',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit, size: 20),
+                        const SizedBox(width: 12),
+                        Text('Editar Perfil', style: GoogleFonts.poppins(fontSize: 14)),
+                      ],
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.logout, color: Colors.white),
-                    tooltip: 'Cerrar sesión',
-                    onPressed: () {
-                      authViewModel.signOut();
-                    },
+                  PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.logout, size: 20),
+                        const SizedBox(width: 12),
+                        Text('Cerrar sesión', style: GoogleFonts.poppins(fontSize: 14)),
+                      ],
+                    ),
                   ),
                 ],
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.white24,
+                  backgroundImage: user.photoURL != null
+                      ? NetworkImage(user.photoURL!)
+                      : null,
+                  child: user.photoURL == null
+                      ? const Icon(
+                          Icons.person,
+                          size: 22,
+                          color: Colors.white,
+                        )
+                      : null,
+                ),
               ),
             ),
         ],
